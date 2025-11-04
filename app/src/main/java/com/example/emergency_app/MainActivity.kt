@@ -1,47 +1,37 @@
 package com.example.emergency_app
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.emergency_app.ui.theme.EmergencyappTheme
+import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
+import com.example.emergency_app.ui.emergency_contact.EmergencyContactFragment
+import com.example.emergency_app.ui.home.HomeFragment
+import com.example.emergency_app.ui.medical_info.MedicalInfoFragment
+import com.google.android.material.bottomnavigation.BottomNavigationView
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            EmergencyappTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+        setContentView(R.layout.activity_main)
+        val bottomNavigationView: BottomNavigationView = findViewById(R.id.bottomNavigationView)
+
+        val homeFragment = HomeFragment()
+        val medicalInfoFragment = MedicalInfoFragment()
+        val emergencyContactFragment = EmergencyContactFragment()
+
+        setCurrentFragment(homeFragment)
+
+        bottomNavigationView.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.home -> setCurrentFragment(homeFragment)
+                R.id.medical_info -> setCurrentFragment(medicalInfoFragment)
+                R.id.emergency_contact -> setCurrentFragment(emergencyContactFragment)
             }
+            true
         }
     }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    EmergencyappTheme {
-        Greeting("Android")
-    }
+    private fun setCurrentFragment(fragment: Fragment) =
+        supportFragmentManager.beginTransaction().apply {
+            replace(R.id.flFragment, fragment)
+            commit()
+        }
 }

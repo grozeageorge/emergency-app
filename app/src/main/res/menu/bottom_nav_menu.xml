@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/home"
+        android:title="@string/home"
+        android:icon="@drawable/home_24"/>
+    <item
+        android:id="@+id/medical_info"
+        android:title="@string/medical_information"
+        android:icon="@drawable/medical_information_24"/>
+    <item
+        android:id="@+id/emergency_contact"
+        android:title="@string/emergency_contact"
+        android:icon="@drawable/contact_phone_24"/>
+</menu>
