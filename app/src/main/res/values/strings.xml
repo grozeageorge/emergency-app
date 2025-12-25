@@ -8,4 +8,25 @@
     <string name="name_e_g_jane_doe">Name (e.g. Jane Doe)</string>
     <string name="phone_number">Phone Number</string>
     <string name="relationship_e_g_sister">Relationship (e.g. Sister)</string>
+    <string name="emergency_medical_id">Emergency Medical ID</string>
+    <string name="identity">Identity</string>
+    <string name="full_name">Full Name</string>
+    <string name="national_id">National ID</string>
+    <string name="vitals">Vitals</string>
+    <string name="blood">Blood</string>
+    <string name="birth_date">Birth Date</string>
+    <string name="gender">Gender</string>
+    <string name="organ_donor">Organ Donor</string>
+    <string name="profile_picture">Profile picture</string>
+    <string name="alert_icon">Alert icon</string>
+    <string name="critical_information">Critical Information</string>
+    <string name="allergies">Allergies</string>
+    <string name="current_medications">Current Medications</string>
+    <string name="history_and_results">Medical History and Results</string>
+    <string name="medical_conditions">Medical Conditions</string>
+    <string name="medical_devices_implants">Medical Devices / Implants</string>
+    <string name="recent_surgery">Recent Surgery</string>
+    <string name="recent_test_results">Recent Test Results</string>
+    <string name="save_medical_id">Save Medical ID</string>
+    <string name="edit_medical_id">Edit Medical ID</string>
 </resources>
