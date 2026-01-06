@@ -1,56 +1,169 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:padding="12dp"
-    android:gravity="center_vertical">
+    android:layout_marginBottom="16dp"
+    app:cardBackgroundColor="@color/card_background"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="2dp"
+    app:strokeWidth="0dp">
 
     <LinearLayout
-        android:layout_width="0dp"
-        android:layout_weight="1"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:padding="16dp">
 
-        <TextView
-            android:id="@+id/tvContactNameRel"
+        <!-- HEADER ROW: Title + Icons -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Name — Relationship"
-            android:textStyle="bold" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
 
-        <TextView
-            android:id="@+id/tvPhone"
+            <!-- "Emergency Contact #1" -->
+            <TextView
+                android:id="@+id/tvTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/emergency_contact_1"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <!-- Toggle between Pen (Edit) and Checkmark (Save) -->
+            <ImageButton
+                android:id="@+id/btnEdit"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_edit"
+                app:tint="@color/white"
+                android:contentDescription="@string/desc_edit_contact" />
+
+            <!-- Delete Button (Red Trash) -->
+            <ImageButton
+                android:id="@+id/btnDelete"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_delete"
+                app:tint="#D32F2F"
+                android:contentDescription="@string/desc_delete_contact" />
+
+            <!-- Call Button (Green Phone) -->
+            <ImageButton
+                android:id="@+id/btnCall"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_marginStart="12dp"
+                android:background="@drawable/bg_circle_call"
+                android:elevation="6dp"
+                android:stateListAnimator="@null"
+                android:src="@drawable/ic_call"
+                app:tint="@color/white"
+                android:padding="10dp"
+                android:scaleType="fitCenter"
+                android:contentDescription="@string/desc_call_contact" />
+        </LinearLayout>
+
+        <!-- FIELD 1: Full Name -->
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Phone"
-            android:layout_marginTop="4dp" />
+            android:hint="@string/label_full_name"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+            app:boxStrokeColor="@color/input_border_color"
+            android:textColorHint="@color/input_border_color"
+            app:hintTextColor="@color/input_border_color">
 
-        <TextView
-            android:id="@+id/tvPriority"
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etContactName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:inputType="textPersonName|textCapWords" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- FIELD 2: Relationship -->
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Priority"
-            android:layout_marginTop="2dp" />
+            android:layout_marginTop="12dp"
+            android:hint="@string/label_relationship"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+            app:boxStrokeColor="@color/input_border_color"
+            android:textColorHint="@color/input_border_color"
+            app:hintTextColor="@color/input_border_color">
 
-        <TextView
-            android:id="@+id/tvAddress"
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etRelationship"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:inputType="textCapWords" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- FIELD 3: Phone Number -->
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Address"
-            android:layout_marginTop="2dp" />
+            android:layout_marginTop="12dp"
+            android:hint="@string/label_phone_number"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+            app:boxStrokeColor="@color/input_border_color"
+            android:textColorHint="@color/input_border_color"
+            app:hintTextColor="@color/input_border_color">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etPhone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:inputType="phone" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- FIELD 4: Priority -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:hint="@string/label_priority"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+            app:boxStrokeColor="@color/input_border_color"
+            android:textColorHint="@color/input_border_color"
+            app:hintTextColor="@color/input_border_color">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etPriority"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:inputType="number" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- FIELD 5: Address -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:hint="@string/label_address"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+            app:boxStrokeColor="@color/input_border_color"
+            android:textColorHint="@color/input_border_color"
+            app:hintTextColor="@color/input_border_color">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etAddress"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:inputType="textPostalAddress" />
+        </com.google.android.material.textfield.TextInputLayout>
+
     </LinearLayout>
-
-    <!-- Call button on the right (visual only) -->
-    <ImageButton
-        android:id="@+id/btnCall"
-        android:layout_width="44dp"
-        android:layout_height="44dp"
-        android:contentDescription="Call"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:src="@android:drawable/ic_menu_call"
-        android:layout_marginStart="8dp"
-        app:tint="?android:attr/textColorSecondary" />
-</LinearLayout>
-
+</com.google.android.material.card.MaterialCardView>
