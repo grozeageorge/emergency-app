@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">emergency-app</string>
-    <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="emergency_contact">Contacts</string>
     <string name="medical_information">Medical Info</string>
@@ -29,4 +28,19 @@
     <string name="recent_test_results">Recent Test Results</string>
     <string name="save_medical_id">Save Medical ID</string>
     <string name="edit_medical_id">Edit Medical ID</string>
+    <string name="header_emergency_contacts">Emergency Contacts</string>
+    <string name="btn_add_contact">Add New Contact</string>
+    <string name="label_full_name">Full Name</string>
+    <string name="label_relationship">Relationship</string>
+    <string name="label_phone_number">Phone Number</string>
+    <string name="label_priority">Priority</string>
+    <string name="label_address">Address</string>
+    <string name="desc_edit_contact">Edit Contact</string>
+    <string name="desc_delete_contact">Delete Contact</string>
+    <string name="desc_call_contact">Call Contact</string>
+    <string name="emergency_contact_1">Emergency Contact #1</string>
+    <string name="edit">Edit</string>
+    <string name="delete">Delete</string>
+    <string name="header_subtitle">John Doe</string>
+    <string name="title_contact_number">Emergency Contact #%1$d</string>
 </resources>

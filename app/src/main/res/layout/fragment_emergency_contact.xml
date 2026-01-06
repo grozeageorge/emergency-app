@@ -1,58 +1,108 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/emergency_contact_fragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:fillViewport="true"
+    android:background="@color/app_background">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingBottom="10dp">
+        android:orientation="vertical"
+        android:paddingBottom="40dp"> <!-- Extra padding at bottom so button isn't stuck to edge -->
 
-        <TextView
-            android:id="@+id/username"
-            android:layout_width="0dp"
+        <!-- HEADER AREA (Same as before) -->
+        <FrameLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="John Doe"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:textStyle="bold" />
+            android:layout_marginBottom="16dp">
 
-        <ImageButton
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                android:background="@drawable/rounded_background"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center_horizontal"
+                android:layout_marginTop="40dp">
+
+                <FrameLayout
+                    android:layout_width="108dp"
+                    android:layout_height="108dp"
+                    android:background="@drawable/circle_shadow">
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="100dp"
+                        android:layout_height="100dp"
+                        android:layout_gravity="center"
+                        app:cardCornerRadius="50dp"
+                        app:strokeColor="#FFFFFF"
+                        app:strokeWidth="4dp"
+                        app:cardElevation="0dp">
+                        <ImageView
+                            android:id="@+id/imgProfile"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:contentDescription="@string/desc_edit_contact"
+                            android:src="@android:drawable/ic_menu_camera"
+                            android:scaleType="centerCrop"
+                            android:background="#EEEEEE"/>
+                    </com.google.android.material.card.MaterialCardView>
+                </FrameLayout>
+
+                <TextView
+                    android:id="@+id/tvHeaderTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/header_emergency_contacts"
+                    android:textColor="@color/white"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="4dp"/>
+
+                <TextView
+                    android:id="@+id/tvUserNameSubtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/header_subtitle"
+                    android:textColor="#DDDDDD"
+                    android:textSize="14sp"/>
+            </LinearLayout>
+        </FrameLayout>
+
+        <!-- RECYCLER VIEW (The List) -->
+        <!-- nestedScrollingEnabled="false" lets the outer ScrollView handle the scrolling -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/contacts_rv"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:nestedScrollingEnabled="false"
+            android:paddingHorizontal="16dp"
+            android:clipToPadding="false"/>
+
+        <!-- ADD BUTTON (Now sits naturally below the list) -->
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnAddContact"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:contentDescription="Add contact"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@android:drawable/ic_input_add"
-            android:layout_marginStart="8dp"
-            app:tint="?android:attr/textColorSecondary" />
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="@string/btn_add_contact"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:cornerRadius="30dp"
+            android:textColor="#FFFFFF"
 
-        <ImageButton
-            android:id="@+id/btnDeleteContact"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:contentDescription="Delete contact"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@android:drawable/ic_menu_delete"
-            android:layout_marginStart="4dp"
-            app:tint="?android:attr/textColorSecondary" />
+            android:backgroundTint="#333333"
+            app:strokeColor="#555555"
+            app:strokeWidth="1dp"
+
+            android:layout_marginTop="8dp"
+            android:layout_marginHorizontal="16dp"/>
+
     </LinearLayout>
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#DDDDDD"
-        android:layout_marginBottom="8dp" />
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/contacts_rv"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
-</LinearLayout>
+</androidx.core.widget.NestedScrollView>
