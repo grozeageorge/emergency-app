@@ -24,13 +24,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:gravity="center_horizontal"
-                android:layout_marginTop="40dp">
+                android:gravity="center_horizontal">
 
                 <FrameLayout
                     android:layout_width="108dp"
                     android:layout_height="108dp"
-                    android:background="@drawable/circle_shadow">
+                    android:background="@drawable/circle_shadow"
+                    android:layout_marginTop="5dp">
 
                     <com.google.android.material.card.MaterialCardView
                         android:layout_width="100dp"
@@ -58,7 +58,7 @@
                     android:textColor="#FFFFFF"
                     android:textSize="20sp"
                     android:textStyle="bold"
-                    android:layout_marginTop="4dp"/>
+                    android:layout_marginTop="10dp"/>
             </LinearLayout>
         </FrameLayout>
 
