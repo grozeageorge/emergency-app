@@ -66,7 +66,6 @@ class EmergencyContactFragment : Fragment() {
                 if (position != -1 && position < contacts.size) {
                     contacts.removeAt(position)
                     adapter.notifyItemRemoved(position)
-                    adapter.notifyItemRangeChanged(position, contacts.size) // Updates "Contact #1, #2" titles
                 }
             },
             onSaveClick = {
