@@ -42,5 +42,5 @@
     <string name="edit">Edit</string>
     <string name="delete">Delete</string>
     <string name="header_subtitle">John Doe</string>
-    <string name="title_contact_number">Emergency Contact #%1$d</string>
+    <string name="title_contact_number">Contact #%1$d</string>
 </resources>
