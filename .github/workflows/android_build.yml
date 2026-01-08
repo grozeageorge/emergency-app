@@ -1,42 +1,55 @@
-name: Android Build CI
+name: Android CI/CD
 
-# Triggers: Run this pipeline when code is pushed to main or a pull request is made
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "master" ] # Runs CI + CD (Upload)
   pull_request:
-    branches: [ "master" ]
+    branches: [ "master" ] # Runs CI only (No Upload)
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Download your code to the virtual machine
+      # 1. Setup Environment
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Set up Java (Android Studio currently uses Java 17 by default)
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      # 3. Make the Gradle script executable
+      # 2. Inject Secrets (The google-services.json)
+      - name: Create google-services.json
+        env:
+          DATA: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          echo $DATA | base64 -d > app/google-services.json
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      # 4. Try to Build the App (Debug version)
-      # This checks for compilation errors and syntax mistakes
+      # 3. Build the APK
       - name: Build with Gradle
         run: ./gradlew assembleDebug
 
-      # 5. Run Lint (Optional but recommended)
-      # Checks for code style issues and potential bugs
+      # 4. Safety Checks (If these fail, Upload will NOT happen)
       - name: Run Lint
         run: ./gradlew lintDebug
 
-      # 6. Run Tests (Even if you don't have them yet, keep this here for later)
       - name: Run Unit Tests
         run: ./gradlew testDebugUnitTest
+
+      # 5. CD: Upload to Firebase (The New Part)
+      # This checks "if: github.ref == 'refs/heads/master'"
+      # ensuring we ONLY upload when code is actually merged to master.
+      - name: Upload to Firebase App Distribution
+        if: github.ref == 'refs/heads/master'
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        with:
+          appId: ${{ secrets.FIREBASE_APP_ID }}
+          serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          groups: qa-team
+          file: app/build/outputs/apk/debug/app-debug.apk
