@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="@color/app_background">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="32dp"
+        android:gravity="center">
+
+        <!-- LOGO (Using the new image) -->
+        <ImageView
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:contentDescription="@string/logo"
+            android:src="@drawable/ic_app_logo"
+            android:layout_marginBottom="48dp"/>
+
+        <!-- Email Field -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/email"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            app:boxStrokeColor="@color/white"
+            app:boxStrokeWidth="1dp"
+            android:textColorHint="#AAAAAA"
+            app:hintTextColor="@color/white"
+            app:startIconDrawable="@android:drawable/ic_dialog_email"
+            app:startIconTint="#AAAAAA">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etEmail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textEmailAddress"
+                android:textColor="@color/white"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Password Field -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:hint="@string/password"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            app:boxStrokeColor="@color/white"
+            app:boxStrokeWidth="1dp"
+            android:textColorHint="#AAAAAA"
+            app:hintTextColor="@color/white"
+
+            app:endIconMode="password_toggle"
+            app:endIconTint="@color/white"
+
+            app:startIconDrawable="@android:drawable/ic_lock_idle_lock"
+            app:startIconTint="#AAAAAA">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etPassword"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPassword"
+                android:textColor="@color/white"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Login Button (Red BG, Black Text) -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnLogin"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="@string/login"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            android:layout_marginTop="32dp"
+            app:cornerRadius="30dp"
+            android:backgroundTint="#D32F2F"/>
+
+        <!-- "Don't have an account?" Text -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/no_account"
+            android:textColor="#DDDDDD"
+            android:textSize="14sp"
+            android:layout_marginTop="32dp"
+            android:layout_marginBottom="8dp"/>
+
+        <!-- Register Button (Gray BG, White Text) -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnGoToRegister"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="@string/register"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/white"
+            app:cornerRadius="30dp"
+            android:backgroundTint="#555555"
+            app:strokeColor="#777777"
+            app:strokeWidth="1dp"/>
+
+    </LinearLayout>
+</ScrollView>

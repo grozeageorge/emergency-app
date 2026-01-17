@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Red Circle -->
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="#D32F2F"/>
+            <size android:width="100dp" android:height="100dp"/>
+        </shape>
+    </item>
+    <!-- SOS Text (Simulated with paths because vector text is hard) -->
+    <!-- Ideally you use an image, but this is a quick vector approximation of "SOS" -->
+    <item android:gravity="center">
+        <vector android:width="60dp" android:height="24dp" android:viewportWidth="60" android:viewportHeight="24">
+            <path android:fillColor="#FFFFFF" android:pathData="M10,4 H4 C2.9,4 2,4.9 2,6 V8 C2,9.1 2.9,10 4,10 H8 V12 H2 V14 H10 C11.1,14 12,13.1 12,12 V10 C12,8.9 11.1,8 10,8 H6 V6 H12 V4 Z"/>
+            <path android:fillColor="#FFFFFF" android:pathData="M30,4 C26.7,4 24,6.7 24,10 V14 C24,17.3 26.7,20 30,20 C33.3,20 36,17.3 36,14 V10 C36,6.7 33.3,4 30,4 M32,14 C32,15.1 31.1,16 30,16 C28.9,16 28,15.1 28,14 V10 C28,8.9 28.9,8 30,8 C31.1,8 32,8.9 32,10 V14 Z"/>
+            <path android:fillColor="#FFFFFF" android:pathData="M58,4 H52 C50.9,4 50,4.9 50,6 V8 C50,9.1 50.9,10 52,10 H56 V12 H50 V14 H58 C59.1,14 60,13.1 60,12 V10 C60,8.9 59.1,8 58,8 H54 V6 H60 V4 Z"/>
+        </vector>
+    </item>
+</layer-list>
