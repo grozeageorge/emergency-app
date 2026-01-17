@@ -43,4 +43,20 @@
     <string name="delete">Delete</string>
     <string name="header_subtitle">John Doe</string>
     <string name="title_contact_number">Contact #%1$d</string>
+
+    <string name="logo">App Logo</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="login">Login</string>
+    <string name="no_account">Don\'t have an account?</string>
+
+    <!-- Register Screen Strings -->
+    <string name="welcome">Welcome to\nEmergency App</string>
+    <string name="register">Register</string>
+    <string name="repeat_password">Repeat Password</string>
+    <string name="back_to_login">Back to Login</string>
+
+    <!-- Home Screen Strings -->
+    <string name="sos_button">SOS Button</string>
+    <string name="log_out">Log Out</string>
 </resources>

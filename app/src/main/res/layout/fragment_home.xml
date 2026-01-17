@@ -1,14 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.home.HomeFragment">
+    android:orientation="vertical"
+    android:gravity="center"
+    android:background="@color/app_background"
+    android:padding="32dp">
 
-    <!-- TODO: Update blank fragment layout -->
     <TextView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="Home" />
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/home"
+        android:textColor="@color/white"
+        android:textSize="32sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="60dp"/>
 
-</FrameLayout>
+    <!-- THE SOS BUTTON -->
+    <!-- scaleType="fitCenter" ensures the image isn't cropped -->
+    <ImageButton
+        android:id="@+id/btnSOS"
+        android:layout_width="220dp"
+        android:layout_height="220dp"
+        android:src="@drawable/ic_sos_button"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:scaleType="fitCenter"
+        android:contentDescription="@string/sos_button"/>
+
+    <!-- LOGOUT BUTTON (Gray BG, White Text) -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnLogout"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:text="@string/log_out"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="@color/white"
+
+        android:layout_marginTop="80dp"
+
+        app:cornerRadius="30dp"
+        android:backgroundTint="#555555"
+        app:strokeColor="#777777"
+        app:strokeWidth="1dp"/>
+
+</LinearLayout>
