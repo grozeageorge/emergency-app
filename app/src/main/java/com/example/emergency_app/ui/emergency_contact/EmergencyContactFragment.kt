@@ -16,6 +16,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.emergency_app.databinding.FragmentEmergencyContactBinding
 import com.example.emergency_app.model.EmergencyContact
 import androidx.core.net.toUri
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 
 class EmergencyContactFragment : Fragment() {
 
@@ -24,6 +27,11 @@ class EmergencyContactFragment : Fragment() {
 
     private val contacts = mutableListOf<EmergencyContact>()
     private lateinit var adapter: EmergencyContactAdapter
+
+    //Firebase
+    private lateinit var db: FirebaseFirestore
+    private lateinit var auth: FirebaseAuth
+    private var snapshotListener: ListenerRegistration? = null
 
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
@@ -41,6 +49,10 @@ class EmergencyContactFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Initialize Firebase
+        db = FirebaseFirestore.getInstance()
+        auth = FirebaseAuth.getInstance()
+
         // 1. Set the Subtitle based on Medical Info
         val sharedPref = requireActivity().getSharedPreferences("MedicalIDPrefs", Context.MODE_PRIVATE)
         val userName = sharedPref.getString("FULL_NAME", "")
@@ -51,24 +63,13 @@ class EmergencyContactFragment : Fragment() {
             userName // Show the name from Medical Tab
         }
 
-        // 2. Clear old dummy data and ensure 1 empty contact exists
-        if (contacts.isEmpty()) {
-            contacts.add(EmergencyContact()) // Adds one empty card
-        }
-
         // 3. Setup Adapter
         adapter = EmergencyContactAdapter(
             contacts,
             onCallClick = { phoneNumber -> makePhoneCall(phoneNumber) },
-            onDeleteClick = { contact ->
-                // Remove the item from list
-                val position = contacts.indexOf(contact)
-                if (position != -1 && position < contacts.size) {
-                    contacts.removeAt(position)
-                    adapter.notifyItemRemoved(position)
-                }
-            },
-            onSaveClick = {
+            onDeleteClick = { contact -> deleteContactFromFirestore(contact) },
+            onSaveClick = { contact ->
+                saveContactToFirestore(contact)
                 Toast.makeText(context, "Contact Saved", Toast.LENGTH_SHORT).show()
             }
         )
@@ -78,11 +79,76 @@ class EmergencyContactFragment : Fragment() {
 
         // 4. "Add New Contact" Button Logic
         binding.btnAddContact.setOnClickListener {
-            contacts.add(EmergencyContact()) // Add empty card
-            adapter.notifyItemInserted(contacts.size - 1)
-            // Scroll to bottom
-            binding.contactsRv.scrollToPosition(contacts.size - 1)
+            val newContact = EmergencyContact(isEditing = true)
+            saveContactToFirestore(newContact)
         }
+
+        setupRealtimeUpdates()
+    }
+
+    private fun setupRealtimeUpdates() {
+        val userId = auth.currentUser?.uid ?: return
+
+        val contactsRef = db.collection("users").document(userId).collection("contacts")
+
+        snapshotListener = contactsRef.orderBy("priority").addSnapshotListener { snapshotListener, e ->
+            if (e != null) {
+                Toast.makeText(context, "Error fetching contacts: ${e.message}", Toast.LENGTH_SHORT)
+                    .show()
+                return@addSnapshotListener
+            }
+
+            if (snapshotListener != null) {
+                for (docChange in snapshotListener.documentChanges) {
+                    val contact = docChange.document.toObject(EmergencyContact::class.java)
+                    when (docChange.type) {
+                        com.google.firebase.firestore.DocumentChange.Type.ADDED -> {
+                            contacts.add(docChange.newIndex, contact)
+                            adapter.notifyItemInserted(docChange.newIndex)
+                        }
+
+                        com.google.firebase.firestore.DocumentChange.Type.MODIFIED -> {
+                            contacts[docChange.oldIndex] = contact
+                            if (docChange.oldIndex == docChange.newIndex) {
+                                adapter.notifyItemChanged(docChange.newIndex)
+                            } else {
+                                contacts.removeAt(docChange.oldIndex)
+                                contacts.add(docChange.newIndex, contact)
+                                adapter.notifyItemMoved(docChange.oldIndex, docChange.newIndex)
+                                adapter.notifyItemChanged(docChange.newIndex)
+                            }
+                        }
+
+                        com.google.firebase.firestore.DocumentChange.Type.REMOVED -> {
+                            contacts.removeAt(docChange.oldIndex)
+                            adapter.notifyItemRemoved(docChange.oldIndex)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun saveContactToFirestore(contact: EmergencyContact) {
+        val userId = auth.currentUser?.uid ?: return
+
+        db.collection("users").document(userId).collection("contacts")
+            .document(contact.id)
+            .set(contact)
+            .addOnFailureListener {
+                Toast.makeText(context, "Failed to save", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun deleteContactFromFirestore(contact: EmergencyContact) {
+        val userId = auth.currentUser?.uid ?: return
+
+        db.collection("users").document(userId).collection("contacts")
+            .document(contact.id)
+            .delete()
+            .addOnSuccessListener {
+                Toast.makeText(context, "Contact deleted.", Toast.LENGTH_SHORT).show()
+            }
     }
 
     private fun makePhoneCall(phoneNumber: String) {
@@ -100,6 +166,7 @@ class EmergencyContactFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        snapshotListener?.remove()
         _binding = null
     }
 }

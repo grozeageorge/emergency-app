@@ -16,7 +16,7 @@ class EmergencyContactAdapter(
     private val items: MutableList<EmergencyContact>,
     private val onCallClick: (String) -> Unit,
     private val onDeleteClick: (EmergencyContact) -> Unit,
-    private val onSaveClick: () -> Unit // New callback for the "Saved" message
+    private val onSaveClick: (EmergencyContact) -> Unit // New callback for the "Saved" message
 ) : RecyclerView.Adapter<EmergencyContactAdapter.VH>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
@@ -47,17 +47,23 @@ class EmergencyContactAdapter(
         // List of all inputs to make enabling/disabling easier
         private val allInputs = listOf(etName, etRelation, etPhone, etPriority, etAddress)
 
+        private var nameWatcher: TextWatcher? = null
+        private var relationWatcher: TextWatcher? = null
+        private var phoneWatcher: TextWatcher? = null
+        private var priorityWatcher: TextWatcher? = null
+        private var addressWatcher: TextWatcher? = null
+
         fun bind(
             contact: EmergencyContact,
             position: Int,
             onCallClick: (String) -> Unit,
             onDeleteClick: (EmergencyContact) -> Unit,
-            onSaveClick: () -> Unit
+            onSaveClick: (EmergencyContact) -> Unit
         ) {
             tvTitle.text = itemView.context.getString(R.string.title_contact_number, position + 1)
 
-            // 1. Populate Data
-            // We use simple setText because the TextWatchers update the model
+            removeTextWatchers()
+
             etName.setText(contact.name)
             etRelation.setText(contact.relationship)
             etPhone.setText(contact.phoneNumber)
@@ -66,34 +72,30 @@ class EmergencyContactAdapter(
 
             // 2. Handle Edit Mode vs View Mode
             if (contact.isEditing) {
-                // EDIT MODE: Inputs enabled, Icon is "Checkmark/Save"
                 enableInputs(true)
                 btnEdit.setImageResource(R.drawable.ic_check) // "Nike" checkmark
-                etName.requestFocus() // Focus on the first field
+                if (etName.hasFocus())
+                    etName.requestFocus()
             } else {
-                // VIEW MODE: Inputs disabled, Icon is "Pen/Edit"
                 enableInputs(false)
                 btnEdit.setImageResource(R.drawable.ic_edit)
             }
 
-            // 3. EDIT BUTTON CLICK LISTENER
+            setupTextWatchers(contact)
+
             btnEdit.setOnClickListener {
                 if (contact.isEditing) {
                     // It WAS editing, user clicked SAVE
                     contact.isEditing = false
-                    notifyItemChanged(position) // Refresh row to lock fields
-                    onSaveClick() // Show "Contact Saved" toast
+                    notifyItemChanged(position)
+                    onSaveClick(contact)
                 } else {
                     // It WAS locked, user clicked EDIT
                     contact.isEditing = true
-                    notifyItemChanged(position) // Refresh row to unlock fields
+                    notifyItemChanged(position)
                 }
             }
 
-            // 4. Text Watchers (Save as they type)
-            setupTextWatchers(contact)
-
-            // 5. Other Buttons
             btnCall.setOnClickListener { onCallClick(contact.phoneNumber) }
             btnDelete.setOnClickListener { onDeleteClick(contact) }
         }
@@ -108,22 +110,38 @@ class EmergencyContactAdapter(
         }
 
         private fun setupTextWatchers(contact: EmergencyContact) {
-            // Basic watchers to keep the object updated
-            etName.addTextChangedListener(object : SimpleTextWatcher() {
+            nameWatcher = object : SimpleTextWatcher() {
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { contact.name = s.toString() }
-            })
-            etRelation.addTextChangedListener(object : SimpleTextWatcher() {
+            }
+            etName.addTextChangedListener(nameWatcher)
+
+            relationWatcher = object : SimpleTextWatcher() {
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { contact.relationship = s.toString() }
-            })
-            etPhone.addTextChangedListener(object : SimpleTextWatcher() {
+            }
+            etRelation.addTextChangedListener(relationWatcher)
+
+            phoneWatcher = object : SimpleTextWatcher() {
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { contact.phoneNumber = s.toString() }
-            })
-            etPriority.addTextChangedListener(object : SimpleTextWatcher() {
+            }
+            etPhone.addTextChangedListener(phoneWatcher)
+
+            priorityWatcher = object : SimpleTextWatcher() {
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { contact.priority = s.toString().toIntOrNull() ?: 0 }
-            })
-            etAddress.addTextChangedListener(object : SimpleTextWatcher() {
+            }
+            etPriority.addTextChangedListener(priorityWatcher)
+
+            addressWatcher = object : SimpleTextWatcher() {
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { contact.address = s.toString() }
-            })
+            }
+            etAddress.addTextChangedListener(addressWatcher)
+        }
+
+        private fun removeTextWatchers() {
+            if (nameWatcher != null) etName.removeTextChangedListener(nameWatcher)
+            if (relationWatcher != null) etRelation.removeTextChangedListener(relationWatcher)
+            if (phoneWatcher != null) etPhone.removeTextChangedListener(phoneWatcher)
+            if (priorityWatcher != null) etPriority.removeTextChangedListener(priorityWatcher)
+            if (addressWatcher != null) etAddress.removeTextChangedListener(addressWatcher)
         }
     }
 
@@ -132,4 +150,6 @@ class EmergencyContactAdapter(
         override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         override fun afterTextChanged(s: Editable?) {}
     }
+
+
 }

@@ -1,7 +1,5 @@
 package com.example.emergency_app.ui.medical_info
 
-import android.content.Context
-import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -9,28 +7,35 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import com.example.emergency_app.databinding.FragmentMedicalInfoBinding
-import androidx.core.content.edit
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 
 
 class MedicalInfoFragment : Fragment() {
     private var _binding: FragmentMedicalInfoBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var sharedPreferences: SharedPreferences
+    // Firebase
+    private lateinit var db: FirebaseFirestore
+    private lateinit var auth: FirebaseAuth
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentMedicalInfoBinding.inflate(inflater, container, false)
         return binding.root
     }
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        sharedPreferences = requireActivity().getSharedPreferences("MedicalIDPrefs", Context.MODE_PRIVATE)
+        // Initialize Firebase
+        db = FirebaseFirestore.getInstance()
+        auth = FirebaseAuth.getInstance()
 
-        loadData()
+        loadMedicalData()
+
         setEditMode(false)
 
         binding.btnEdit.setOnClickListener {
@@ -38,9 +43,7 @@ class MedicalInfoFragment : Fragment() {
         }
 
         binding.btnSave.setOnClickListener {
-            saveData()
-            setEditMode(false)
-            Toast.makeText(context, "Medical Info Saved", Toast.LENGTH_SHORT).show()
+            saveMedicalData()
         }
     }
 
@@ -65,40 +68,60 @@ class MedicalInfoFragment : Fragment() {
         }
     }
 
-    private fun saveData() {
-        sharedPreferences.edit {
-            binding.apply {
-                putString("FULL_NAME", etFullName.text.toString())
-                putString("NATIONAL_ID", etNationalId.text.toString())
-                putString("GENDER", etGender.text.toString())
-                putString("DOB", etDob.text.toString())
-                putString("BLOOD_TYPE", etBloodType.text.toString())
-                putString("ORGAN_DONOR", etOrganDonor.text.toString())
-                putString("ALLERGIES", etAllergies.text.toString())
-                putString("MEDICATIONS", etMedications.text.toString())
-                putString("CONDITIONS", etConditions.text.toString())
-                putString("DEVICES", etDevices.text.toString())
-                putString("SURGERY", etSurgery.text.toString())
-                putString("TEST_RESULTS", etTestResults.text.toString())
+    private fun saveMedicalData() {
+        val userId = auth.currentUser?.uid ?: return
+
+        val medicalMap = hashMapOf(
+            "fullName" to binding.etFullName.text.toString(),
+            "nationalId" to binding.etNationalId.text.toString(),
+            "gender" to binding.etGender.text.toString(),
+            "dob" to binding.etDob.text.toString(),
+            "bloodType" to binding.etBloodType.text.toString(),
+            "organDonor" to binding.etOrganDonor.text.toString(),
+            "allergies" to binding.etAllergies.text.toString(),
+            "medications" to binding.etMedications.text.toString(),
+            "conditions" to binding.etConditions.text.toString(),
+            "devices" to binding.etDevices.text.toString(),
+            "surgery" to binding.etSurgery.text.toString(),
+            "testResults" to binding.etTestResults.text.toString()
+        )
+
+        db.collection("users").document(userId)
+            .set(medicalMap, SetOptions.merge())
+            .addOnSuccessListener {
+                Toast.makeText(context, "Medical Info Saved", Toast.LENGTH_SHORT).show()
+                setEditMode(false)
             }
-        }
+            .addOnFailureListener {
+                Toast.makeText(context, "Failed to save data", Toast.LENGTH_SHORT).show()
+            }
     }
 
-    private fun loadData() {
-        binding.apply {
-            etFullName.setText(sharedPreferences.getString("FULL_NAME", ""))
-            etNationalId.setText(sharedPreferences.getString("NATIONAL_ID", ""))
-            etGender.setText(sharedPreferences.getString("GENDER", ""))
-            etDob.setText(sharedPreferences.getString("DOB", ""))
-            etBloodType.setText(sharedPreferences.getString("BLOOD_TYPE", ""))
-            etOrganDonor.setText(sharedPreferences.getString("ORGAN_DONOR", ""))
-            etAllergies.setText(sharedPreferences.getString("ALLERGIES", ""))
-            etMedications.setText(sharedPreferences.getString("MEDICATIONS", ""))
-            etConditions.setText(sharedPreferences.getString("CONDITIONS", ""))
-            etDevices.setText(sharedPreferences.getString("DEVICES", ""))
-            etSurgery.setText(sharedPreferences.getString("SURGERY", ""))
-            etTestResults.setText(sharedPreferences.getString("TEST_RESULTS", ""))
-        }
+    private fun loadMedicalData() {
+        val userId = auth.currentUser?.uid ?: return
+
+        db.collection("users").document(userId).get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    binding.apply {
+                        etFullName.setText(document.getString("fullName") ?: "")
+                        etNationalId.setText(document.getString("nationalId") ?: "")
+                        etGender.setText(document.getString("gender") ?: "")
+                        etDob.setText(document.getString("dob") ?: "")
+                        etBloodType.setText(document.getString("bloodType") ?: "")
+                        etOrganDonor.setText(document.getString("organDonor") ?: "")
+                        etAllergies.setText(document.getString("allergies") ?: "")
+                        etMedications.setText(document.getString("medications") ?: "")
+                        etConditions.setText(document.getString("conditions") ?: "")
+                        etDevices.setText(document.getString("devices") ?: "")
+                        etSurgery.setText(document.getString("surgery") ?: "")
+                        etTestResults.setText(document.getString("testResults") ?: "")
+                    }
+                }
+            }
+            .addOnFailureListener {
+                Toast.makeText(context, "Failed to load data", Toast.LENGTH_SHORT).show()
+            }
     }
 
     override fun onDestroyView() {
