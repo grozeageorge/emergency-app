@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.emergency_app.R
 import com.example.emergency_app.model.EmergencyContact
 import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 
 class EmergencyContactAdapter(
     private val items: MutableList<EmergencyContact>,
@@ -44,6 +45,13 @@ class EmergencyContactAdapter(
         private val etPriority: TextInputEditText = itemView.findViewById(R.id.etPriority)
         private val etAddress: TextInputEditText = itemView.findViewById(R.id.etAddress)
 
+        // Layouts (The wrappers that control animation)
+        private val tilName: TextInputLayout = itemView.findViewById(R.id.tilName)
+        private val tilRelation: TextInputLayout = itemView.findViewById(R.id.tilRelation)
+        private val tilPhone: TextInputLayout = itemView.findViewById(R.id.tilPhone)
+        private val tilPriority: TextInputLayout = itemView.findViewById(R.id.tilPriority)
+        private val tilAddress: TextInputLayout = itemView.findViewById(R.id.tilAddress)
+
         // List of all inputs to make enabling/disabling easier
         private val allInputs = listOf(etName, etRelation, etPhone, etPriority, etAddress)
 
@@ -64,24 +72,22 @@ class EmergencyContactAdapter(
 
             removeTextWatchers()
 
-            etName.setText(contact.name)
-            etRelation.setText(contact.relationship)
-            etPhone.setText(contact.phoneNumber)
-            etPriority.setText(if (contact.priority > 0) contact.priority.toString() else "")
-            etAddress.setText(contact.address)
+            setTextNoAnim(tilName, etName, contact.name)
+            setTextNoAnim(tilRelation, etRelation, contact.relationship)
+            setTextNoAnim(tilPhone, etPhone, contact.phoneNumber)
+            setTextNoAnim(tilPriority, etPriority, if (contact.priority > 0) contact.priority.toString() else "")
+            setTextNoAnim(tilAddress, etAddress, contact.address)
 
             // 2. Handle Edit Mode vs View Mode
             if (contact.isEditing) {
                 enableInputs(true)
                 btnEdit.setImageResource(R.drawable.ic_check) // "Nike" checkmark
-                if (etName.hasFocus())
+                if (!etName.hasFocus())
                     etName.requestFocus()
             } else {
                 enableInputs(false)
                 btnEdit.setImageResource(R.drawable.ic_edit)
             }
-
-            setupTextWatchers(contact)
 
             btnEdit.setOnClickListener {
                 if (contact.isEditing) {
@@ -96,9 +102,19 @@ class EmergencyContactAdapter(
                 }
             }
 
+            setupTextWatchers(contact)
+
             btnCall.setOnClickListener { onCallClick(contact.phoneNumber) }
             btnDelete.setOnClickListener { onDeleteClick(contact) }
         }
+
+        private fun setTextNoAnim(layout: TextInputLayout, editText: TextInputEditText, text: String) {
+            val wasEnabled = layout.isHintAnimationEnabled
+            layout.isHintAnimationEnabled = false // Turn off animation
+            editText.setText(text)                // Set text (snaps instantly)
+            layout.isHintAnimationEnabled = wasEnabled // Turn back on for user interaction
+        }
+
 
         private fun enableInputs(enable: Boolean) {
             allInputs.forEach {
@@ -126,7 +142,7 @@ class EmergencyContactAdapter(
             etPhone.addTextChangedListener(phoneWatcher)
 
             priorityWatcher = object : SimpleTextWatcher() {
-                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { contact.priority = s.toString().toIntOrNull() ?: 0 }
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { contact.priority = s.toString().toIntOrNull() ?: 9 }
             }
             etPriority.addTextChangedListener(priorityWatcher)
 
@@ -137,11 +153,11 @@ class EmergencyContactAdapter(
         }
 
         private fun removeTextWatchers() {
-            if (nameWatcher != null) etName.removeTextChangedListener(nameWatcher)
-            if (relationWatcher != null) etRelation.removeTextChangedListener(relationWatcher)
-            if (phoneWatcher != null) etPhone.removeTextChangedListener(phoneWatcher)
-            if (priorityWatcher != null) etPriority.removeTextChangedListener(priorityWatcher)
-            if (addressWatcher != null) etAddress.removeTextChangedListener(addressWatcher)
+            nameWatcher?.let { etName.removeTextChangedListener(it) }
+            relationWatcher?.let { etRelation.removeTextChangedListener(it) }
+            phoneWatcher?.let { etPhone.removeTextChangedListener(it) }
+            priorityWatcher?.let { etPriority.removeTextChangedListener(it) }
+            addressWatcher?.let { etAddress.removeTextChangedListener(it) }
         }
     }
 
@@ -150,6 +166,4 @@ class EmergencyContactAdapter(
         override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         override fun afterTextChanged(s: Editable?) {}
     }
-
-
 }

@@ -28,7 +28,7 @@ class EmergencyContactFragment : Fragment() {
     private val contacts = mutableListOf<EmergencyContact>()
     private lateinit var adapter: EmergencyContactAdapter
 
-    //Firebase
+    // Firebase
     private lateinit var db: FirebaseFirestore
     private lateinit var auth: FirebaseAuth
     private var snapshotListener: ListenerRegistration? = null
@@ -66,9 +66,28 @@ class EmergencyContactFragment : Fragment() {
         // 3. Setup Adapter
         adapter = EmergencyContactAdapter(
             contacts,
+
             onCallClick = { phoneNumber -> makePhoneCall(phoneNumber) },
-            onDeleteClick = { contact -> deleteContactFromFirestore(contact) },
+
+            onDeleteClick = { contact ->
+                if (contact.isEditing) {
+                    Toast.makeText(context, "Save contact before deleting", Toast.LENGTH_SHORT).show()
+                } else {
+                    deleteContactFromFirestore(contact)
+                }
+            },
+
             onSaveClick = { contact ->
+                // --- VALIDATION CHECK ---
+                if (contact.priority == 0) {
+                    Toast.makeText(context, "Priority must be greater than 0", Toast.LENGTH_SHORT).show()
+
+                    // REVERT: Turn edit mode back ON because save failed
+                    contact.isEditing = true
+                    // Refresh just this row to show the "Checkmark" again
+                    adapter.notifyItemChanged(contacts.indexOf(contact))
+                    return@EmergencyContactAdapter
+                }
                 saveContactToFirestore(contact)
                 Toast.makeText(context, "Contact Saved", Toast.LENGTH_SHORT).show()
             }
@@ -80,51 +99,49 @@ class EmergencyContactFragment : Fragment() {
         // 4. "Add New Contact" Button Logic
         binding.btnAddContact.setOnClickListener {
             val newContact = EmergencyContact(isEditing = true)
-            saveContactToFirestore(newContact)
+            contacts.add(newContact)
+            adapter.notifyItemInserted(contacts.size - 1)
+            binding.contactsRv.scrollToPosition(contacts.size - 1)
         }
 
         setupRealtimeUpdates()
     }
 
     private fun setupRealtimeUpdates() {
-        val userId = auth.currentUser?.uid ?: return
+        if (snapshotListener != null) {
+            snapshotListener?.remove()
+            snapshotListener = null
+        }
+
+        val currentUser = auth.currentUser
+
+        if (currentUser == null) {
+            Toast.makeText(context, "User not authenticated.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val userId = currentUser.uid
 
         val contactsRef = db.collection("users").document(userId).collection("contacts")
 
-        snapshotListener = contactsRef.orderBy("priority").addSnapshotListener { snapshotListener, e ->
+        snapshotListener = contactsRef.orderBy("priority").addSnapshotListener { snapshot, e ->
             if (e != null) {
-                Toast.makeText(context, "Error fetching contacts: ${e.message}", Toast.LENGTH_SHORT)
-                    .show()
+                // Handle error
                 return@addSnapshotListener
             }
 
-            if (snapshotListener != null) {
-                for (docChange in snapshotListener.documentChanges) {
-                    val contact = docChange.document.toObject(EmergencyContact::class.java)
-                    when (docChange.type) {
-                        com.google.firebase.firestore.DocumentChange.Type.ADDED -> {
-                            contacts.add(docChange.newIndex, contact)
-                            adapter.notifyItemInserted(docChange.newIndex)
-                        }
+            if (snapshot != null) {
+                // 1. Clear the list ONCE before adding new stuff
+                contacts.clear()
 
-                        com.google.firebase.firestore.DocumentChange.Type.MODIFIED -> {
-                            contacts[docChange.oldIndex] = contact
-                            if (docChange.oldIndex == docChange.newIndex) {
-                                adapter.notifyItemChanged(docChange.newIndex)
-                            } else {
-                                contacts.removeAt(docChange.oldIndex)
-                                contacts.add(docChange.newIndex, contact)
-                                adapter.notifyItemMoved(docChange.oldIndex, docChange.newIndex)
-                                adapter.notifyItemChanged(docChange.newIndex)
-                            }
-                        }
+                // 2. Convert all documents to objects
+                val loadedContacts = snapshot.toObjects(EmergencyContact::class.java)
 
-                        com.google.firebase.firestore.DocumentChange.Type.REMOVED -> {
-                            contacts.removeAt(docChange.oldIndex)
-                            adapter.notifyItemRemoved(docChange.oldIndex)
-                        }
-                    }
-                }
+                // 3. Add them to your list
+                contacts.addAll(loadedContacts)
+
+                // 4. Refresh the whole list
+                adapter.notifyDataSetChanged()
             }
         }
     }
@@ -135,13 +152,21 @@ class EmergencyContactFragment : Fragment() {
         db.collection("users").document(userId).collection("contacts")
             .document(contact.id)
             .set(contact)
+            .addOnSuccessListener {
+                Toast.makeText(context, "Contact saved.", Toast.LENGTH_SHORT).show()
+            }
             .addOnFailureListener {
                 Toast.makeText(context, "Failed to save", Toast.LENGTH_SHORT).show()
             }
     }
 
     private fun deleteContactFromFirestore(contact: EmergencyContact) {
-        val userId = auth.currentUser?.uid ?: return
+        val currentUser = auth.currentUser
+        if (currentUser == null) {
+            Toast.makeText(context, "You must be logged in to delete contacts.", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val userId = currentUser.uid
 
         db.collection("users").document(userId).collection("contacts")
             .document(contact.id)
@@ -167,6 +192,7 @@ class EmergencyContactFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         snapshotListener?.remove()
+        snapshotListener = null
         _binding = null
     }
 }
