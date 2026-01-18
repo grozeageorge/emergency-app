@@ -73,6 +73,7 @@
 
         <!-- FIELD 1: Full Name -->
         <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/label_full_name"
@@ -91,6 +92,7 @@
 
         <!-- FIELD 2: Relationship -->
         <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilRelation"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
@@ -110,6 +112,7 @@
 
         <!-- FIELD 3: Phone Number -->
         <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilPhone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
@@ -129,6 +132,7 @@
 
         <!-- FIELD 4: Priority -->
         <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilPriority"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
@@ -148,6 +152,7 @@
 
         <!-- FIELD 5: Address -->
         <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilAddress"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"

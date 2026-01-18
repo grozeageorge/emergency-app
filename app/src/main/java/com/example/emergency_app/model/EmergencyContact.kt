@@ -7,7 +7,7 @@ data class EmergencyContact(
     var name: String = "",
     var phoneNumber: String = "",
     var relationship: String = "",
-    var priority: Int = 0,
+    var priority: Int = 9,
     var address: String = "",
     var isEditing: Boolean = false
 )
