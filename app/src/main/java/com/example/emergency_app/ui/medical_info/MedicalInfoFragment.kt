@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.lifecycle.ViewModelProvider
 import com.example.emergency_app.databinding.FragmentMedicalInfoBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -34,7 +35,13 @@ class MedicalInfoFragment : Fragment() {
         db = FirebaseFirestore.getInstance()
         auth = FirebaseAuth.getInstance()
 
-        loadMedicalData()
+        val viewModel = ViewModelProvider(requireActivity())[MedicalViewModel::class.java]
+
+        viewModel.medicalData.observe(viewLifecycleOwner) { data ->
+            if (data != null) {
+                populateFields(data)
+            }
+        }
 
         setEditMode(false)
 
@@ -44,6 +51,7 @@ class MedicalInfoFragment : Fragment() {
 
         binding.btnSave.setOnClickListener {
             saveMedicalData()
+            viewModel.refresh()
         }
     }
 
@@ -97,31 +105,23 @@ class MedicalInfoFragment : Fragment() {
             }
     }
 
-    private fun loadMedicalData() {
-        val userId = auth.currentUser?.uid ?: return
-
-        db.collection("users").document(userId).get()
-            .addOnSuccessListener { document ->
-                if (document.exists()) {
-                    binding.apply {
-                        etFullName.setText(document.getString("fullName") ?: "")
-                        etNationalId.setText(document.getString("nationalId") ?: "")
-                        etGender.setText(document.getString("gender") ?: "")
-                        etDob.setText(document.getString("dob") ?: "")
-                        etBloodType.setText(document.getString("bloodType") ?: "")
-                        etOrganDonor.setText(document.getString("organDonor") ?: "")
-                        etAllergies.setText(document.getString("allergies") ?: "")
-                        etMedications.setText(document.getString("medications") ?: "")
-                        etConditions.setText(document.getString("conditions") ?: "")
-                        etDevices.setText(document.getString("devices") ?: "")
-                        etSurgery.setText(document.getString("surgery") ?: "")
-                        etTestResults.setText(document.getString("testResults") ?: "")
-                    }
-                }
-            }
-            .addOnFailureListener {
-                Toast.makeText(context, "Failed to load data", Toast.LENGTH_SHORT).show()
-            }
+    private fun populateFields(data: Map<String, Any>) {
+        binding.apply {
+            // The 'data' map comes from the ViewModel (which got it from Firestore)
+            // We use 'as? String' to safely convert the generic data back to text
+            etFullName.setText(data["fullName"] as? String)
+            etNationalId.setText(data["nationalId"] as? String)
+            etGender.setText(data["gender"] as? String)
+            etDob.setText(data["dob"] as? String)
+            etBloodType.setText(data["bloodType"] as? String)
+            etOrganDonor.setText(data["organDonor"] as? String)
+            etAllergies.setText(data["allergies"] as? String)
+            etMedications.setText(data["medications"] as? String)
+            etConditions.setText(data["conditions"] as? String)
+            etDevices.setText(data["devices"] as? String)
+            etSurgery.setText(data["surgery"] as? String)
+            etTestResults.setText(data["testResults"] as? String)
+        }
     }
 
     override fun onDestroyView() {

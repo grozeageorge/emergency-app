@@ -2,7 +2,6 @@ package com.example.emergency_app.ui.home
 
 import android.content.Intent
 import android.os.Bundle
-import android.preference.PreferenceManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -26,7 +25,7 @@ class HomeFragment : Fragment() {
         // This prevents the map from being empty/white
         Configuration.getInstance().load(
             requireContext(),
-            PreferenceManager.getDefaultSharedPreferences(requireContext())
+            requireContext().getSharedPreferences("osm_config", android.content.Context.MODE_PRIVATE)
         )
 
         _binding = FragmentHomeBinding.inflate(inflater, container, false)

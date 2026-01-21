@@ -7,11 +7,16 @@ import com.example.emergency_app.ui.emergency_contact.EmergencyContactFragment
 import com.example.emergency_app.ui.home.HomeFragment
 import com.example.emergency_app.ui.medical_info.MedicalInfoFragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import androidx.lifecycle.ViewModelProvider
+import com.example.emergency_app.ui.medical_info.MedicalViewModel
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        ViewModelProvider(this)[MedicalViewModel::class.java]
+
         val bottomNavigationView: BottomNavigationView = findViewById(R.id.bottomNavigationView)
 
         val homeFragment = HomeFragment()
