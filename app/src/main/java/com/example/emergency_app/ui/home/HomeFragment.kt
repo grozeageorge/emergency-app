@@ -6,8 +6,12 @@ import android.preference.PreferenceManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.ImageButton
 import androidx.fragment.app.Fragment
 import com.example.emergency_app.LoginActivity
+import com.example.emergency_app.MainActivity
+import com.example.emergency_app.R
 import com.example.emergency_app.databinding.FragmentHomeBinding
 import com.google.firebase.auth.FirebaseAuth
 import org.osmdroid.config.Configuration
@@ -44,6 +48,13 @@ class HomeFragment : Fragment() {
             val intent = Intent(requireActivity(), LoginActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(intent)
+        }
+        // In HomeFragment.kt inside onViewCreated or onClickListener:
+        val btnStart = view.findViewById<ImageButton>(R.id.btnSOS)
+
+        btnStart.setOnClickListener {
+            // Cast activity to MainActivity to access the function
+            (activity as? MainActivity)?.startDrivingMode()
         }
 
         // (We will add SOS button logic here later)
