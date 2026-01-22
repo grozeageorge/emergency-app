@@ -3,14 +3,12 @@ package com.example.emergency_app
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
-import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
-import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import kotlin.math.sqrt
@@ -28,7 +26,7 @@ class AccidentDetectionService : Service(), SensorEventListener {
         super.onCreate()
 
         // 1. Initialize Sensors
-        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
 
         // 2. Start Foreground immediately (Crucial for Android 14+)
@@ -74,10 +72,8 @@ class AccidentDetectionService : Service(), SensorEventListener {
         val channelName = "Accident Detection"
 
         // Create Channel (Required for Android O+)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_LOW)
-            getSystemService(NotificationManager::class.java)?.createNotificationChannel(channel)
-        }
+        val channel = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_LOW)
+        getSystemService(NotificationManager::class.java)?.createNotificationChannel(channel)
 
         // Notification UI
         val notification = NotificationCompat.Builder(this, channelId)
@@ -90,11 +86,7 @@ class AccidentDetectionService : Service(), SensorEventListener {
 
         // Start Foreground
         // Android 14 (API 34) requires specifying the type if defined in Manifest
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(1, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
-        } else {
-            startForeground(1, notification)
-        }
+        startForeground(1, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
     }
 
     override fun onBind(intent: Intent?): IBinder? = null

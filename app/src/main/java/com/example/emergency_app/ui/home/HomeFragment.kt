@@ -25,16 +25,15 @@ import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import java.util.Locale
+import androidx.core.graphics.toColorInt
 
 class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
 
-    // Map & Location
     private var locationOverlay: MyLocationNewOverlay? = null
 
-    // SOS Logic
     private var countdownTimer: CountDownTimer? = null
     private var tts: TextToSpeech? = null
     private var isSOSActive = false
@@ -69,7 +68,29 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
         tts = TextToSpeech(requireContext(), this)
 
         // 3. SOS Button Click -> Start Countdown
-
+        binding.btnSOS.setOnClickListener {
+            if (!isSOSActive) {
+                startSOSCountdown()
+            }
+        }
+        // 4. Cancel Button -> Stop Everything
+        binding.btnCancelSOS.setOnClickListener {
+            stopSOSSequence()
+        }
+        var isDriving = false
+        binding.btnStartDriving.setOnClickListener {
+            if (!isDriving) {
+                (activity as? MainActivity)?.startDrivingMode()
+                binding.btnStartDriving.setText(R.string.stop_driving)
+                binding.btnStartDriving.setBackgroundColor("#4CAF50".toColorInt())
+                isDriving = true
+            } else {
+                (activity as? MainActivity)?.stopDrivingMode()
+                binding.btnStartDriving.setText(R.string.start_driving)
+                binding.btnStartDriving.setBackgroundColor("#E0E0E0".toColorInt())
+                isDriving = false
+            }
+        }
 
         // 5. Logout
         binding.btnLogout.setOnClickListener {
@@ -86,16 +107,9 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
             (activity as? MainActivity)?.startDrivingMode()
         }
 
-        binding.btnSOS.setOnClickListener {
-            if (!isSOSActive) {
-                startSOSCountdown()
-            }
-        }
 
-        // 4. Cancel Button -> Stop Everything
-        binding.btnCancelSOS.setOnClickListener {
-            stopSOSSequence()
-        }
+
+
     }
 
     // --- SOS LOGIC ---
@@ -125,12 +139,12 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
 
     private fun triggerPanicMode() {
         isSOSActive = true
-        binding.tvCountdown.text = "SOS!"
+        binding.tvCountdown.text = getString(R.string.sos)
         binding.tvCountdown.setTextColor(Color.RED)
 
         // Hide Cancel button? Or keep it to stop the alarm?
         // Let's keep it so user can stop the noise.
-        binding.btnCancelSOS.text = "STOP ALARM"
+        binding.btnCancelSOS.text = getString(R.string.stop_alarm)
 
         // 1. Play Robotic Voice
         speak("Emergency! Emergency! Help is coming.")
@@ -155,7 +169,7 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
         binding.btnLogout.visibility = View.VISIBLE
         binding.tvCountdown.text = "3"
         binding.tvCountdown.setTextColor(ContextCompat.getColor(requireContext(), R.color.header_red)) // Or Color.RED
-        binding.btnCancelSOS.text = "CANCEL"
+        binding.btnCancelSOS.text = getString(R.string.cancel)
     }
 
     // --- TEXT TO SPEECH SETUP ---

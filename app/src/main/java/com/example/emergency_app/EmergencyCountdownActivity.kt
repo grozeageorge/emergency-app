@@ -12,6 +12,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 class EmergencyCountdownActivity : AppCompatActivity() {
 
@@ -19,8 +21,10 @@ class EmergencyCountdownActivity : AppCompatActivity() {
     private lateinit var btnCancel: Button
     private var timer: CountDownTimer? = null
 
-    // REPLACE THIS WITH REAL CONTACTS FROM YOUR DATABASE
-    private val emergencyContacts = listOf("0761873242")
+    private lateinit var db: FirebaseFirestore
+    private lateinit var auth: FirebaseAuth
+
+    private val emergencyPhoneNumbers = mutableListOf<String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,6 +35,11 @@ class EmergencyCountdownActivity : AppCompatActivity() {
         tvCountdown = findViewById(R.id.tvCountdown)
         btnCancel = findViewById(R.id.btnCancel)
 
+        db = FirebaseFirestore.getInstance()
+        auth = FirebaseAuth.getInstance()
+
+        fetchEmergencyContacts()
+
         startTimer()
 
         btnCancel.setOnClickListener {
@@ -39,7 +48,28 @@ class EmergencyCountdownActivity : AppCompatActivity() {
             finish() // Close the screen
         }
     }
+    private fun fetchEmergencyContacts() {
+        val currentUser = auth.currentUser
+        if (currentUser == null) return
 
+        db.collection("users")
+            .document(currentUser.uid).collection("contacts")
+            .get()
+            .addOnSuccessListener { snapshot ->
+                emergencyPhoneNumbers.clear()
+                for (document in snapshot) {
+                    val phone = document.getString("phoneNumber")
+                    if (!phone.isNullOrEmpty()) {
+                        emergencyPhoneNumbers.add(phone)
+                    }
+                }
+
+                println("Loaded ${emergencyPhoneNumbers.size} numbers to text.")
+            }
+            .addOnFailureListener {
+                // If fetching fails, we can't do much, maybe log it
+            }
+    }
     private fun startTimer() {
         timer = object : CountDownTimer(30000, 1000) {
             override fun onTick(millisUntilFinished: Long) {
@@ -54,6 +84,13 @@ class EmergencyCountdownActivity : AppCompatActivity() {
 
     private fun sendEmergencySMS() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(this, "Location permission missing!", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (emergencyPhoneNumbers.isEmpty()) {
+            Toast.makeText(this, "No emergency contacts found to message!", Toast.LENGTH_LONG).show()
+            finish()
             return
         }
 
@@ -66,11 +103,17 @@ class EmergencyCountdownActivity : AppCompatActivity() {
                     "EMERGENCY! Crash detected. GPS unavailable."
                 }
 
-                val smsManager = SmsManager.getDefault()
-                for (phone in emergencyContacts) {
-                    smsManager.sendTextMessage(phone, null, msg, null, null)
+                try {
+                    val smsManager =
+                        this.getSystemService(SmsManager::class.java)
+
+                    for (phone in emergencyPhoneNumbers) {
+                        smsManager?.sendTextMessage(phone, null, msg, null, null)
+                    }
+                    Toast.makeText(this, "SOS SENT!", Toast.LENGTH_LONG).show()
+                } catch (e: Exception) {
+                    Toast.makeText(this, "Failed to send SMS.", Toast.LENGTH_SHORT).show()
                 }
-                Toast.makeText(this@EmergencyCountdownActivity, "SOS SENT!", Toast.LENGTH_LONG).show()
                 finish()
             }
     }

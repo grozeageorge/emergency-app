@@ -5,7 +5,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- 1. THE OPEN STREET MAP VIEW -->
     <org.osmdroid.views.MapView
         android:id="@+id/map"
         android:layout_width="match_parent"
@@ -15,7 +14,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- 2. LOG OUT BUTTON (Top Right) -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnLogout"
         android:layout_width="wrap_content"
@@ -33,7 +31,6 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
-    <!-- 3. SOS BUTTON (Bottom Right) -->
     <ImageButton
         android:id="@+id/btnSOS"
         android:layout_width="100dp"
@@ -48,7 +45,30 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
-    <!-- 4. COUNTDOWN OVERLAY (Hidden by default) -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnStartDriving"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/start_driving"
+        android:textColor="#D32F2F"
+        android:textStyle="bold"
+        android:textSize="14sp"
+        app:icon="@drawable/ic_car"
+        app:iconTint="#D32F2F"
+        app:cornerRadius="20dp"
+        app:strokeColor="#D32F2F"
+        app:strokeWidth="1dp"
+        android:backgroundTint="#E0E0E0"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp"
+        android:elevation="6dp"
+        android:layout_marginBottom="50dp"
+        android:layout_marginStart="24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"/>
+
     <FrameLayout
         android:id="@+id/layoutCountdown"
         android:layout_width="match_parent"
@@ -57,39 +77,32 @@
         android:visibility="gone"
         android:elevation="20dp">
 
-        <LinearLayout
+
+        <TextView
+            android:id="@+id/tvCountdown"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_gravity="center"
-            android:gravity="center">
+            android:text="@string/_3"
+            android:textColor="#D32F2F"
+            android:textSize="120sp"
+            android:textStyle="bold"/>
 
-            <TextView
-                android:id="@+id/tvCountdown"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="3"
-                android:textColor="#D32F2F"
-                android:textSize="120sp"
-                android:textStyle="bold"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/sending_sos"
+            android:textColor="#FFFFFF"
+            android:textSize="24sp"
+            android:layout_marginTop="16dp"/>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Sending SOS..."
-                android:textColor="#FFFFFF"
-                android:textSize="24sp"
-                android:layout_marginTop="16dp"/>
+        <Button
+            android:id="@+id/btnCancelSOS"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/cancel"
+            android:backgroundTint="#555555"
+            android:layout_marginTop="32dp"/>
 
-            <Button
-                android:id="@+id/btnCancelSOS"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="CANCEL"
-                android:backgroundTint="#555555"
-                android:layout_marginTop="32dp"/>
-
-        </LinearLayout>
     </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
