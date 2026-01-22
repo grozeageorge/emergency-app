@@ -69,16 +69,7 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
         tts = TextToSpeech(requireContext(), this)
 
         // 3. SOS Button Click -> Start Countdown
-        binding.btnSOS.setOnClickListener {
-            if (!isSOSActive) {
-                startSOSCountdown()
-            }
-        }
 
-        // 4. Cancel Button -> Stop Everything
-        binding.btnCancelSOS.setOnClickListener {
-            stopSOSSequence()
-        }
 
         // 5. Logout
         binding.btnLogout.setOnClickListener {
@@ -93,6 +84,17 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
         btnStart.setOnClickListener {
             // Cast activity to MainActivity to access the function
             (activity as? MainActivity)?.startDrivingMode()
+        }
+
+        binding.btnSOS.setOnClickListener {
+            if (!isSOSActive) {
+                startSOSCountdown()
+            }
+        }
+
+        // 4. Cancel Button -> Stop Everything
+        binding.btnCancelSOS.setOnClickListener {
+            stopSOSSequence()
         }
     }
 
@@ -152,7 +154,7 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
         binding.btnSOS.visibility = View.VISIBLE
         binding.btnLogout.visibility = View.VISIBLE
         binding.tvCountdown.text = "3"
-        binding.tvCountdown.setTextColor(ContextCompat.getColor(requireContext(), com.example.emergency_app.R.color.header_red)) // Or Color.RED
+        binding.tvCountdown.setTextColor(ContextCompat.getColor(requireContext(), R.color.header_red)) // Or Color.RED
         binding.btnCancelSOS.text = "CANCEL"
     }
 
