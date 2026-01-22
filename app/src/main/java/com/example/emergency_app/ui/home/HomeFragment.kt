@@ -13,8 +13,11 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import android.widget.ImageButton
 import androidx.fragment.app.Fragment
 import com.example.emergency_app.LoginActivity
+import com.example.emergency_app.MainActivity
+import com.example.emergency_app.R
 import com.example.emergency_app.databinding.FragmentHomeBinding
 import com.google.firebase.auth.FirebaseAuth
 import org.osmdroid.config.Configuration
@@ -45,10 +48,12 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        // This prevents the map from being empty/white
         Configuration.getInstance().load(
             requireContext(),
             requireContext().getSharedPreferences("osm_config", android.content.Context.MODE_PRIVATE)
         )
+
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -81,6 +86,13 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
             val intent = Intent(requireActivity(), LoginActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(intent)
+        }
+        // In HomeFragment.kt inside onViewCreated or onClickListener:
+        val btnStart = view.findViewById<ImageButton>(R.id.btnSOS)
+
+        btnStart.setOnClickListener {
+            // Cast activity to MainActivity to access the function
+            (activity as? MainActivity)?.startDrivingMode()
         }
     }
 
@@ -179,6 +191,7 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
         binding.map.overlays.add(locationOverlay)
     }
 
+    // --- Lifecycle Methods are Required for OSM ---
     override fun onResume() {
         super.onResume()
         binding.map.onResume()

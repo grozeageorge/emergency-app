@@ -61,6 +61,8 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
     implementation(libs.osmdroid)
+    implementation(libs.play.services.location)
+    implementation(libs.accompanist.permissions)
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
