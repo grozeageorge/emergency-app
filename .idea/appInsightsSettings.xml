@@ -10,9 +10,9 @@
               <option name="connection">
                 <ConnectionSetting>
                   <option name="appId" value="com.example.emergency_app" />
-                  <option name="mobileSdkAppId" value="1:715061453050:android:ec4bc84dc832d3c24f2943" />
-                  <option name="projectId" value="emergency-app-8a1c1" />
-                  <option name="projectNumber" value="715061453050" />
+                  <option name="mobileSdkAppId" value="1:719014815944:android:11141c3c45da31082dddfd" />
+                  <option name="projectId" value="emergency-app-eebb6" />
+                  <option name="projectNumber" value="719014815944" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />
