@@ -49,8 +49,7 @@ class EmergencyCountdownActivity : AppCompatActivity() {
         }
     }
     private fun fetchEmergencyContacts() {
-        val currentUser = auth.currentUser
-        if (currentUser == null) return
+        val currentUser = auth.currentUser ?: return
 
         db.collection("users")
             .document(currentUser.uid).collection("contacts")
@@ -111,9 +110,10 @@ class EmergencyCountdownActivity : AppCompatActivity() {
                         smsManager?.sendTextMessage(phone, null, msg, null, null)
                     }
                     Toast.makeText(this, "SOS SENT!", Toast.LENGTH_LONG).show()
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     Toast.makeText(this, "Failed to send SMS.", Toast.LENGTH_SHORT).show()
                 }
+                setResult(RESULT_OK)
                 finish()
             }
     }

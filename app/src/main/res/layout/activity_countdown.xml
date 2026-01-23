@@ -10,7 +10,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="CRASH DETECTED!"
+        android:text="@string/crash_detected_title"
         android:textColor="#FFFFFF"
         android:textSize="32sp"
         android:textStyle="bold" />
@@ -19,7 +19,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="Sending Alert In:"
+        android:text="@string/sending_sos_label"
         android:textColor="#FFFFFF"
         android:textSize="18sp" />
 
@@ -28,7 +28,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="30"
+        android:text="@string/_30"
         android:textColor="#FFFFFF"
         android:textSize="96sp"
         android:textStyle="bold" />
@@ -39,7 +39,7 @@
         android:layout_height="60dp"
         android:layout_marginTop="48dp"
         android:backgroundTint="#FFFFFF"
-        android:text="I AM OKAY (CANCEL)"
+        android:text="@string/cancel_sos"
         android:textColor="#D32F2F"
         android:textSize="18sp"
         android:textStyle="bold" />
