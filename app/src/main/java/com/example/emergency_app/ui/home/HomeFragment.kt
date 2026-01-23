@@ -16,7 +16,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresPermission
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.example.emergency_app.EmergencyCountdownActivity
@@ -72,7 +71,7 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
     ): View {
         Configuration.getInstance().load(
             requireContext(),
-            requireContext().getSharedPreferences("osm_config", android.content.Context.MODE_PRIVATE)
+            requireContext().getSharedPreferences("osm_config", Context.MODE_PRIVATE)
         )
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         return binding.root
