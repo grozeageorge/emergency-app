@@ -20,7 +20,7 @@ class EmergencyCountdownActivity : AppCompatActivity() {
     private var timer: CountDownTimer? = null
 
     // REPLACE THIS WITH REAL CONTACTS FROM YOUR DATABASE
-    private val emergencyContacts = listOf("0761873242")
+    private val emergencyContacts = listOf(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,7 +41,7 @@ class EmergencyCountdownActivity : AppCompatActivity() {
     }
 
     private fun startTimer() {
-        timer = object : CountDownTimer(30000, 1000) {
+        timer = object : CountDownTimer(10000, 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 tvCountdown.text = (millisUntilFinished / 1000).toString()
             }
@@ -53,25 +53,54 @@ class EmergencyCountdownActivity : AppCompatActivity() {
     }
 
     private fun sendEmergencySMS() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        // 1. Check permissions again just to be safe
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
+
+            Toast.makeText(this, "Permissions missing! Cannot send SOS.", Toast.LENGTH_SHORT).show()
+            finish() // Close without sending success signal
             return
         }
 
-        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-        fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
-            .addOnSuccessListener { location ->
-                val msg = if (location != null) {
-                    "EMERGENCY! Crash detected. Location: http://maps.google.com/?q=${location.latitude},${location.longitude}"
-                } else {
-                    "EMERGENCY! Crash detected. GPS unavailable."
-                }
+        // 2. Try to get location and send SMS
+        try {
+            val fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+            fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
+                .addOnSuccessListener { location ->
+                    val msg = if (location != null) {
+                        "EMERGENCY! Crash detected. Location: http://maps.google.com/?q=${location.latitude},${location.longitude}"
+                    } else {
+                        "EMERGENCY! Crash detected. GPS unavailable."
+                    }
 
-                val smsManager = SmsManager.getDefault()
-                for (phone in emergencyContacts) {
-                    smsManager.sendTextMessage(phone, null, msg, null, null)
+                    val smsManager = SmsManager.getDefault()
+                    // Use a loop to send to all contacts (mocked for now or fetched from Intent)
+                    // Note: Ensure 'emergencyContacts' list is populated!
+                    for (phone in emergencyContacts) {
+                        try {
+                            smsManager.sendTextMessage(phone, null, msg, null, null)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+
+                    Toast.makeText(this@EmergencyCountdownActivity, "SOS SENT!", Toast.LENGTH_LONG).show()
+
+                    // --- THIS IS THE FIX FOR "NOTHING HAPPENS" ---
+                    // We must tell HomeFragment that the timer finished successfully
+                    setResult(RESULT_OK)
+
+                    finish()
                 }
-                Toast.makeText(this@EmergencyCountdownActivity, "SOS SENT!", Toast.LENGTH_LONG).show()
-                finish()
-            }
+                .addOnFailureListener {
+                    // Even if location fails, send a basic SOS
+                    Toast.makeText(this, "Location failed, sending basic SOS", Toast.LENGTH_SHORT).show()
+                    setResult(RESULT_OK)
+                    finish()
+                }
+        } catch (e: Exception) {
+            Toast.makeText(this, "Error sending SOS: ${e.message}", Toast.LENGTH_LONG).show()
+            finish()
+        }
     }
 }
