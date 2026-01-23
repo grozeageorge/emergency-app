@@ -20,7 +20,7 @@ class AccidentDetectionService : Service(), SensorEventListener {
 
     // Threshold: 8G is good.
     // (1G = sitting still. 3-4G = hard braking. 8G+ = crash/drop)
-    private val CRASH_THRESHOLD = 2.0
+    private val crashThreshold = 2.0
 
     override fun onCreate() {
         super.onCreate()
@@ -48,7 +48,7 @@ class AccidentDetectionService : Service(), SensorEventListener {
             // Calculate G-Force
             val gForce = sqrt((x * x + y * y + z * z).toDouble()) / SensorManager.GRAVITY_EARTH
 
-            if (gForce > CRASH_THRESHOLD) {
+            if (gForce > crashThreshold) {
                 // STOP LISTENING so we don't trigger the screen 10 times in 1 second
                 sensorManager.unregisterListener(this)
                 triggerEmergencyCountdown()
