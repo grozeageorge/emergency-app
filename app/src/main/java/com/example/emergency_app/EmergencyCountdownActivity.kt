@@ -12,6 +12,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 class EmergencyCountdownActivity : AppCompatActivity() {
 
@@ -19,8 +21,10 @@ class EmergencyCountdownActivity : AppCompatActivity() {
     private lateinit var btnCancel: Button
     private var timer: CountDownTimer? = null
 
-    // REPLACE THIS WITH REAL CONTACTS FROM YOUR DATABASE
-    private val emergencyContacts = listOf(null)
+    private lateinit var db: FirebaseFirestore
+    private lateinit var auth: FirebaseAuth
+
+    private val emergencyPhoneNumbers = mutableListOf<String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,6 +35,11 @@ class EmergencyCountdownActivity : AppCompatActivity() {
         tvCountdown = findViewById(R.id.tvCountdown)
         btnCancel = findViewById(R.id.btnCancel)
 
+        db = FirebaseFirestore.getInstance()
+        auth = FirebaseAuth.getInstance()
+
+        fetchEmergencyContacts()
+
         startTimer()
 
         btnCancel.setOnClickListener {
@@ -39,9 +48,30 @@ class EmergencyCountdownActivity : AppCompatActivity() {
             finish() // Close the screen
         }
     }
+    private fun fetchEmergencyContacts() {
+        val currentUser = auth.currentUser
+        if (currentUser == null) return
 
+        db.collection("users")
+            .document(currentUser.uid).collection("contacts")
+            .get()
+            .addOnSuccessListener { snapshot ->
+                emergencyPhoneNumbers.clear()
+                for (document in snapshot) {
+                    val phone = document.getString("phoneNumber")
+                    if (!phone.isNullOrEmpty()) {
+                        emergencyPhoneNumbers.add(phone)
+                    }
+                }
+
+                println("Loaded ${emergencyPhoneNumbers.size} numbers to text.")
+            }
+            .addOnFailureListener {
+                // If fetching fails, we can't do much, maybe log it
+            }
+    }
     private fun startTimer() {
-        timer = object : CountDownTimer(10000, 1000) {
+        timer = object : CountDownTimer(30000, 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 tvCountdown.text = (millisUntilFinished / 1000).toString()
             }
@@ -53,54 +83,39 @@ class EmergencyCountdownActivity : AppCompatActivity() {
     }
 
     private fun sendEmergencySMS() {
-        // 1. Check permissions again just to be safe
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
-            ActivityCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
-
-            Toast.makeText(this, "Permissions missing! Cannot send SOS.", Toast.LENGTH_SHORT).show()
-            finish() // Close without sending success signal
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(this, "Location permission missing!", Toast.LENGTH_SHORT).show()
             return
         }
 
-        // 2. Try to get location and send SMS
-        try {
-            val fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-            fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
-                .addOnSuccessListener { location ->
-                    val msg = if (location != null) {
-                        "EMERGENCY! Crash detected. Location: http://maps.google.com/?q=${location.latitude},${location.longitude}"
-                    } else {
-                        "EMERGENCY! Crash detected. GPS unavailable."
-                    }
-
-                    val smsManager = SmsManager.getDefault()
-                    // Use a loop to send to all contacts (mocked for now or fetched from Intent)
-                    // Note: Ensure 'emergencyContacts' list is populated!
-                    for (phone in emergencyContacts) {
-                        try {
-                            smsManager.sendTextMessage(phone, null, msg, null, null)
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
-                    }
-
-                    Toast.makeText(this@EmergencyCountdownActivity, "SOS SENT!", Toast.LENGTH_LONG).show()
-
-                    // --- THIS IS THE FIX FOR "NOTHING HAPPENS" ---
-                    // We must tell HomeFragment that the timer finished successfully
-                    setResult(RESULT_OK)
-
-                    finish()
-                }
-                .addOnFailureListener {
-                    // Even if location fails, send a basic SOS
-                    Toast.makeText(this, "Location failed, sending basic SOS", Toast.LENGTH_SHORT).show()
-                    setResult(RESULT_OK)
-                    finish()
-                }
-        } catch (e: Exception) {
-            Toast.makeText(this, "Error sending SOS: ${e.message}", Toast.LENGTH_LONG).show()
+        if (emergencyPhoneNumbers.isEmpty()) {
+            Toast.makeText(this, "No emergency contacts found to message!", Toast.LENGTH_LONG).show()
             finish()
+            return
         }
+
+        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
+            .addOnSuccessListener { location ->
+                val msg = if (location != null) {
+                    "EMERGENCY! Crash detected. Location: http://maps.google.com/?q=${location.latitude},${location.longitude}"
+                } else {
+                    "EMERGENCY! Crash detected. GPS unavailable."
+                }
+
+                try {
+                    val smsManager =
+                        this.getSystemService(SmsManager::class.java)
+
+                    for (phone in emergencyPhoneNumbers) {
+                        smsManager?.sendTextMessage(phone, null, msg, null, null)
+                    }
+                    Toast.makeText(this, "SOS SENT!", Toast.LENGTH_LONG).show()
+                } catch (e: Exception) {
+                    Toast.makeText(this, "Failed to send SMS.", Toast.LENGTH_SHORT).show()
+                }
+                setResult(RESULT_OK)
+                finish()
+            }
     }
 }
