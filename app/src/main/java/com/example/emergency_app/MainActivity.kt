@@ -63,6 +63,8 @@ class MainActivity : AppCompatActivity() {
             }
             true
         }
+
+        checkAndTriggerAmbulance(intent)
     }
     private fun setCurrentFragment(fragment: Fragment) =
         supportFragmentManager.beginTransaction().apply {
@@ -98,6 +100,39 @@ class MainActivity : AppCompatActivity() {
     private fun hasPermissions(): Boolean {
         return requiredPermissions.all {
             ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        checkAndTriggerAmbulance(intent)
+    }
+
+    private fun checkAndTriggerAmbulance(intent: Intent?) {
+        val shouldTrigger = intent?.getBooleanExtra("TRIGGER_AMBULANCE", false) ?: false
+
+        if (shouldTrigger) {
+            // Get coordinates (Default to 0.0 if missing)
+            val lat = intent.getDoubleExtra("CRASH_LAT", 0.0)
+            val lon = intent.getDoubleExtra("CRASH_LON", 0.0)
+
+            val currentFragment = supportFragmentManager.findFragmentById(R.id.flFragment)
+
+            if (currentFragment is HomeFragment) {
+                // Pass coordinates to the function
+                currentFragment.triggerRealAmbulanceSimulation(lat, lon)
+            } else {
+                val homeFragment = HomeFragment()
+                val bundle = Bundle()
+                bundle.putBoolean("START_SIMULATION", true)
+                bundle.putDouble("CRASH_LAT", lat) // Put in bundle
+                bundle.putDouble("CRASH_LON", lon) // Put in bundle
+                homeFragment.arguments = bundle
+
+                setCurrentFragment(homeFragment)
+                findViewById<BottomNavigationView>(R.id.bottomNavigationView).selectedItemId = R.id.home
+            }
         }
     }
 }
