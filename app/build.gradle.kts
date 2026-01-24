@@ -63,6 +63,9 @@ dependencies {
     implementation(libs.osmdroid)
     implementation(libs.play.services.location)
     implementation(libs.accompanist.permissions)
+    implementation(libs.osmbonuspack)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {

@@ -1,6 +1,7 @@
 package com.example.emergency_app
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.CountDownTimer
@@ -16,6 +17,11 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
 class EmergencyCountdownActivity : AppCompatActivity() {
+
+    // --- DEVELOPER SWITCH ---
+    // Set to TRUE to stop sending real SMS.
+    // Set to FALSE before pushing to GitHub.
+    private val testMode = true
 
     private lateinit var tvCountdown: TextView
     private lateinit var btnCancel: Button
@@ -39,15 +45,15 @@ class EmergencyCountdownActivity : AppCompatActivity() {
         auth = FirebaseAuth.getInstance()
 
         fetchEmergencyContacts()
-
         startTimer()
 
         btnCancel.setOnClickListener {
             timer?.cancel()
             Toast.makeText(this, "Alert Cancelled", Toast.LENGTH_SHORT).show()
-            finish() // Close the screen
+            finish()
         }
     }
+
     private fun fetchEmergencyContacts() {
         val currentUser = auth.currentUser ?: return
 
@@ -62,15 +68,12 @@ class EmergencyCountdownActivity : AppCompatActivity() {
                         emergencyPhoneNumbers.add(phone)
                     }
                 }
-
-                println("Loaded ${emergencyPhoneNumbers.size} numbers to text.")
-            }
-            .addOnFailureListener {
-                // If fetching fails, we can't do much, maybe log it
             }
     }
+
     private fun startTimer() {
-        timer = object : CountDownTimer(30000, 1000) {
+        // Reduced to 5 seconds for testing purposes (Change back to 30000 later)
+        timer = object : CountDownTimer(5000, 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 tvCountdown.text = (millisUntilFinished / 1000).toString()
             }
@@ -82,39 +85,66 @@ class EmergencyCountdownActivity : AppCompatActivity() {
     }
 
     private fun sendEmergencySMS() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        // 1. Check Permissions
+        if (!testMode && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             Toast.makeText(this, "Location permission missing!", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        if (emergencyPhoneNumbers.isEmpty()) {
-            Toast.makeText(this, "No emergency contacts found to message!", Toast.LENGTH_LONG).show()
-            finish()
+            // Even if permission is missing, we should probably go back to home?
+            // For now, let's just return to avoid crash.
             return
         }
 
         val fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
         fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
             .addOnSuccessListener { location ->
+                // 1. Send SMS (Logic handles null location inside string)
                 val msg = if (location != null) {
                     "EMERGENCY! Crash detected. Location: http://maps.google.com/?q=${location.latitude},${location.longitude}"
                 } else {
                     "EMERGENCY! Crash detected. GPS unavailable."
                 }
 
-                try {
-                    val smsManager =
-                        this.getSystemService(SmsManager::class.java)
-
-                    for (phone in emergencyPhoneNumbers) {
-                        smsManager?.sendTextMessage(phone, null, msg, null, null)
+                if (testMode) {
+                    Toast.makeText(this, "TEST MODE: SMS Simulated", Toast.LENGTH_SHORT).show()
+                } else {
+                    try {
+                        val smsManager = this.getSystemService(SmsManager::class.java)
+                        if (emergencyPhoneNumbers.isNotEmpty()) {
+                            for (phone in emergencyPhoneNumbers) {
+                                smsManager?.sendTextMessage(phone, null, msg, null, null)
+                            }
+                            Toast.makeText(this, "SOS SENT!", Toast.LENGTH_LONG).show()
+                        } else {
+                            Toast.makeText(this, "No contacts to call!", Toast.LENGTH_SHORT).show()
+                        }
+                    } catch (_: Exception) {
+                        Toast.makeText(this, "Failed to send SMS.", Toast.LENGTH_SHORT).show()
                     }
-                    Toast.makeText(this, "SOS SENT!", Toast.LENGTH_LONG).show()
-                } catch (_: Exception) {
-                    Toast.makeText(this, "Failed to send SMS.", Toast.LENGTH_SHORT).show()
                 }
-                setResult(RESULT_OK)
-                finish()
+
+                // 2. CRITICAL FIX: Navigate back regardless of whether location was found or not
+                if (location != null) {
+                    navigateBackAndStartSimulation(location.latitude, location.longitude)
+                } else {
+                    // Send 0.0, 0.0 as a signal "I don't know where I am"
+                    // HomeFragment will handle this by checking its own map overlay
+                    navigateBackAndStartSimulation(0.0, 0.0)
+                }
             }
+            .addOnFailureListener {
+                // If Google Play Services fails completely, still go back
+                if (testMode) Toast.makeText(this, "Location failed", Toast.LENGTH_SHORT).show()
+                navigateBackAndStartSimulation(0.0, 0.0)
+            }
+    }
+
+    private fun navigateBackAndStartSimulation(latitude: Double, longitude: Double) {
+        val intent = Intent(this, MainActivity::class.java)
+        intent.putExtra("TRIGGER_AMBULANCE", true)
+        intent.putExtra("CRASH_LAT", latitude) // Pass Data
+        intent.putExtra("CRASH_LON", longitude) // Pass Data
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        startActivity(intent)
+        finish()
     }
 }
