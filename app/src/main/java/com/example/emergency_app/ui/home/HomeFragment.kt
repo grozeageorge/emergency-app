@@ -1,6 +1,8 @@
 package com.example.emergency_app.ui.home
 
 import android.Manifest
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
 import android.app.Activity
 import android.content.Context
@@ -20,6 +22,8 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
 import com.example.emergency_app.EmergencyCountdownActivity
 import com.example.emergency_app.LoginActivity
@@ -28,6 +32,7 @@ import com.example.emergency_app.R
 import com.example.emergency_app.databinding.FragmentHomeBinding
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.osmdroid.bonuspack.location.NominatimPOIProvider
@@ -42,8 +47,6 @@ import org.osmdroid.views.overlay.Polyline
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import java.util.Locale
-import androidx.core.graphics.toColorInt
-import androidx.fragment.app.activityViewModels
 
 class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
 
@@ -57,28 +60,22 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
 
     // Utilities
     private var tts: TextToSpeech? = null
-    private var isDrivingModeActive = false
+    private var isTtsReady = false
+    private var pendingTtsMessage: String? = null // Queue message if TTS isn't ready
 
     private val simulationViewModel: SimulationViewModel by activityViewModels()
-
-
-
     private var ambulanceAnimator: ValueAnimator? = null
 
-    // Permission Launcher
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
             if (isGranted) enableUserLocation()
         }
 
-    // Handle return from Countdown
     private val sosResultLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             triggerRealAmbulanceSimulation()
-        } else {
-            Toast.makeText(context, "SOS Cancelled", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -90,9 +87,7 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
             requireContext(),
             requireContext().getSharedPreferences("osm_config", Context.MODE_PRIVATE)
         )
-        // IMPORTANT: Set User Agent to avoid being blocked by OSM servers
         Configuration.getInstance().userAgentValue = "EmergencyApp/1.0"
-
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -103,157 +98,151 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
         setupMap()
         checkLocationPermission()
         tts = TextToSpeech(requireContext(), this)
+        updateDrivingModeButtonUI()
 
-        // 1. SOS Button
         binding.btnSOS.setOnClickListener {
             val intent = Intent(requireContext(), EmergencyCountdownActivity::class.java)
             sosResultLauncher.launch(intent)
         }
 
-        // 2. Driving Mode Button
         binding.btnDrivingMode.setOnClickListener {
             val mainActivity = activity as? MainActivity ?: return@setOnClickListener
-
-            if (!isDrivingModeActive) {
-                // Start
+            simulationViewModel.isDrivingModeActive = !simulationViewModel.isDrivingModeActive
+            if (simulationViewModel.isDrivingModeActive) {
                 mainActivity.startDrivingMode()
-                isDrivingModeActive = true
-
-                binding.btnDrivingMode.text = getString(R.string.stop_driving)
-                binding.btnDrivingMode.setBackgroundColor("#D32F2F".toColorInt()) // Red
-                binding.btnDrivingMode.setTextColor(Color.BLACK)
-                binding.btnDrivingMode.strokeWidth = 0
-                binding.btnDrivingMode.setIconResource(android.R.drawable.ic_media_pause)
-                binding.btnDrivingMode.iconTint = ContextCompat.getColorStateList(requireContext(), android.R.color.black)
             } else {
-                // Stop
                 mainActivity.stopDrivingMode()
-                isDrivingModeActive = false
-
-                binding.btnDrivingMode.text = getString(R.string.start_driving)
-                binding.btnDrivingMode.setBackgroundColor(Color.WHITE)
-                binding.btnDrivingMode.setTextColor("#D32F2F".toColorInt())
-                binding.btnDrivingMode.strokeColor = ContextCompat.getColorStateList(requireContext(), R.color.header_red) // Or Color.parseColor("#D32F2F")
-                binding.btnDrivingMode.strokeWidth = 5
-                binding.btnDrivingMode.setIconResource(R.drawable.ic_car)
-                binding.btnDrivingMode.iconTint = ContextCompat.getColorStateList(requireContext(), R.color.header_red)
             }
+            updateDrivingModeButtonUI()
         }
 
-        // 3. Logout
         binding.btnLogout.setOnClickListener {
             FirebaseAuth.getInstance().signOut()
             val intent = Intent(requireActivity(), LoginActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(intent)
         }
+    }
 
-        // Check Arguments
-        val shouldStart = arguments?.getBoolean("START_SIMULATION", false) ?: false
-        if (shouldStart) {
-            val lat = arguments?.getDouble("CRASH_LAT", 0.0) ?: 0.0
-            val lon = arguments?.getDouble("CRASH_LON", 0.0) ?: 0.0
+    private fun updateDrivingModeButtonUI() {
+        if (_binding == null) return
+        val isActive = simulationViewModel.isDrivingModeActive
+        val headerRed = ContextCompat.getColor(requireContext(), R.color.header_red)
 
-            arguments?.putBoolean("START_SIMULATION", false)
-
-            view.postDelayed({
-                // Pass the coordinates we got from Activity
-                triggerRealAmbulanceSimulation(lat, lon)
-            }, 1000)
-        }
-
-        if (simulationViewModel.isSimulating && simulationViewModel.activeRoad != null) {
-            // Restore the map visualization without re-calculating the route
-            drawRouteAndStartAnimation(
-                simulationViewModel.activeRoad!!,
-                simulationViewModel.duration,
-                simulationViewModel.currentPlayTime
-            )
+        if (isActive) {
+            binding.btnDrivingMode.text = getString(R.string.stop_driving)
+            binding.btnDrivingMode.setBackgroundColor(headerRed)
+            binding.btnDrivingMode.setTextColor(Color.BLACK)
+            binding.btnDrivingMode.strokeWidth = 0
+            binding.btnDrivingMode.setIconResource(android.R.drawable.ic_media_pause)
+            binding.btnDrivingMode.iconTint = ContextCompat.getColorStateList(requireContext(), android.R.color.black)
+        } else {
+            binding.btnDrivingMode.text = getString(R.string.start_driving)
+            binding.btnDrivingMode.setBackgroundColor(Color.WHITE)
+            binding.btnDrivingMode.setTextColor(headerRed)
+            binding.btnDrivingMode.strokeColor = ContextCompat.getColorStateList(requireContext(), R.color.header_red)
+            binding.btnDrivingMode.strokeWidth = 5
+            binding.btnDrivingMode.setIconResource(R.drawable.ic_car)
+            binding.btnDrivingMode.iconTint = ContextCompat.getColorStateList(requireContext(), R.color.header_red)
         }
     }
 
-    // --- 1. ROUTING SETUP ---
-    fun triggerRealAmbulanceSimulation(lat: Double = 0.0, lon: Double = 0.0) {
-        if (simulationViewModel.isSimulating) {
-            Toast.makeText(context, "Crash confirmed! Ambulance is already en route.", Toast.LENGTH_SHORT).show()
-            return
+    override fun onResume() {
+        super.onResume()
+        binding.map.onResume()
+        locationOverlay?.enableMyLocation()
+        updateDrivingModeButtonUI()
+
+        if (simulationViewModel.pendingSimulation) {
+            simulationViewModel.pendingSimulation = false
+            triggerRealAmbulanceSimulation(simulationViewModel.pendingLat, simulationViewModel.pendingLon)
         }
+
+        // Sync state when returning to tab
+        if (simulationViewModel.isSimulating && simulationViewModel.activeRoad != null) {
+            val now = System.currentTimeMillis()
+            val elapsedTime = now - simulationViewModel.startTimeMillis
+
+            if (elapsedTime < simulationViewModel.duration) {
+                restoreUIForEmergency()
+                drawRouteAndStartAnimation(
+                    simulationViewModel.activeRoad!!,
+                    simulationViewModel.duration,
+                    elapsedTime
+                )
+            } else {
+                resetUI()
+            }
+        }
+    }
+
+    fun triggerRealAmbulanceSimulation(lat: Double = 0.0, lon: Double = 0.0) {
+        if (simulationViewModel.isSimulating) return
 
         speak("Help is on the way. Calculating route from nearest hospital.")
-        vibratePhone()
+        vibratePhone(isArrival = false) // Start Pattern
+        restoreUIForEmergency()
 
-        val userLocation = if (lat != 0.0 && lon != 0.0) {
-            GeoPoint(lat, lon)
-        } else {
-            locationOverlay?.myLocation ?: GeoPoint(44.4268, 26.1025)
-        }
+        val userLocation = if (lat != 0.0 && lon != 0.0) GeoPoint(lat, lon) else locationOverlay?.myLocation ?: GeoPoint(44.4268, 26.1025)
 
         lifecycleScope.launch(Dispatchers.IO) {
-
-            // 1. Find Nearest Hospital
             val poiProvider = NominatimPOIProvider("EmergencyApp/1.0")
-            val pois = try {
-                poiProvider.getPOICloseTo(userLocation, "hospital", 1, 0.1)
-            } catch (_: Exception) { null }
 
-            val startPoint = if (!pois.isNullOrEmpty()) pois[0].mLocation else GeoPoint(userLocation.latitude + 0.01, userLocation.longitude + 0.01)
-            val hospitalName = if (!pois.isNullOrEmpty()) pois[0].mDescription else "Dispatch Center"
+            var startPoint = GeoPoint(userLocation.latitude + 0.01, userLocation.longitude + 0.01)
 
-            // 2. Get Road Route
+            try {
+                val pois = poiProvider.getPOICloseTo(userLocation, "hospital", 10, 0.1)
+                if (!pois.isNullOrEmpty()) {
+                    val closest = pois.minByOrNull { it.mLocation.distanceToAsDouble(userLocation) }
+                    if (closest != null) {
+                        startPoint = closest.mLocation
+                    }
+                }
+            } catch (_: Exception) { }
+
             val roadManager = OSRMRoadManager(requireContext(), "EmergencyApp/1.0")
             val waypoints = arrayListOf(startPoint, userLocation)
             val road = roadManager.getRoad(waypoints)
 
-            // --- NEW MATH: Calculate Realistic Duration ---
-            // Distance is in Kilometers (e.g., 2.5 km)
             val distanceKm = road.mLength
-            val speedKmh = 50.0 // Average ambulance speed in city
-
-            // Time = Distance / Speed (in Hours)
+            val speedKmh = 50.0
             val timeHours = distanceKm / speedKmh
-
-            // Convert to Milliseconds for Animator (Hours * 3600 * 1000)
             val durationMs = (timeHours * 3600 * 1000).toLong()
-
-            // Format for Toast (e.g., "3 min")
             val minutes = (timeHours * 60).toInt()
             val etaString = if (minutes < 1) "< 1 min" else "$minutes min"
 
             withContext(Dispatchers.Main) {
-                if (road.mStatus != Road.STATUS_OK) {
-                    Toast.makeText(context, "Error finding road", Toast.LENGTH_SHORT).show()
-                } else {
-                    // SAVE DATA TO VIEWMODEL
-                    simulationViewModel.activeRoad = road
-                    simulationViewModel.duration = durationMs
-                    simulationViewModel.isSimulating = true
-                    simulationViewModel.currentPlayTime = 0L // Reset time for new simulation
+                if (road.mStatus != Road.STATUS_OK) Toast.makeText(context, "Error finding road", Toast.LENGTH_SHORT).show()
 
-                    // Call the visual function
-                    drawRouteAndStartAnimation(road, durationMs, 0L)
-                }
+                simulationViewModel.activeRoad = road
+                simulationViewModel.duration = durationMs
+                simulationViewModel.startTimeMillis = System.currentTimeMillis()
+                simulationViewModel.isSimulating = true
+
+                Toast.makeText(context, "Ambulance dispatched. ETA: $etaString", Toast.LENGTH_LONG).show()
+                speak("Help is on the way. An ambulance has been dispatched.")
+
+                drawRouteAndStartAnimation(road, durationMs, 0L)
             }
         }
     }
 
     private fun drawRouteAndStartAnimation(road: Road, durationMs: Long, startTime: Long) {
-        // 1. Clean up old overlays
         routeOverlay?.let { binding.map.overlays.remove(it) }
         ambulanceMarker?.let { binding.map.overlays.remove(it) }
 
-        // 2. Draw Route
         routeOverlay = RoadManager.buildRoadOverlay(road)
         routeOverlay?.outlinePaint?.color = Color.RED
         routeOverlay?.outlinePaint?.strokeWidth = 15f
         binding.map.overlays.add(routeOverlay)
 
-        // 3. Draw Marker
         val startPoint = road.mRouteHigh.first()
         ambulanceMarker = Marker(binding.map).apply {
             position = startPoint
             icon = ContextCompat.getDrawable(requireContext(), R.drawable.ic_ambulance)
+            title = "Ambulance"
             setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
-            isFlat = false
+            isFlat = true
         }
         binding.map.overlays.add(ambulanceMarker)
 
@@ -261,82 +250,90 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
             binding.map.zoomToBoundingBox(road.mBoundingBox, true)
         } else {
             binding.map.controller.setZoom(17.0)
-
-            val progress = startTime.toFloat() / durationMs
-            val validProgress = progress.coerceIn(0f, 1f)
-
-            val points = road.mRouteHigh
-            if (points.isNotEmpty()) {
-                val index = (points.size * validProgress).toInt().coerceAtMost(points.size - 1)
-                val currentPos = points[index]
-
-                binding.map.controller.setCenter(currentPos)
-            }
         }
         binding.map.invalidate()
 
-        // 5. Start Animation logic
         animateCarAlongRoad(road, durationMs, startTime)
     }
 
-    // --- 2. ANIMATION & TANGENT ROTATION ---
     private fun animateCarAlongRoad(road: Road, durationMs: Long, startTime: Long) {
         val routePoints = road.mRouteHigh
         if (routePoints.isEmpty()) return
 
-        val finalDuration = if (durationMs < 3000) 3000 else durationMs
+        ambulanceAnimator?.cancel()
 
         ambulanceAnimator = ValueAnimator.ofInt(0, routePoints.size - 1)
-        ambulanceAnimator?.duration = finalDuration
+        ambulanceAnimator?.duration = durationMs
         ambulanceAnimator?.interpolator = LinearInterpolator()
         ambulanceAnimator?.currentPlayTime = startTime
 
         ambulanceAnimator?.addUpdateListener { animation ->
-            if (_binding == null) {
-                ambulanceAnimator?.cancel()
-                return@addUpdateListener
-            }
+            if (_binding == null) return@addUpdateListener
             val index = animation.animatedValue as Int
             val currentPoint = routePoints[index]
-
             ambulanceMarker?.position = currentPoint
 
-            // VERY SIMPLE rotation (optional, safe)
-            if (index < routePoints.size - 1) {
-                val nextPoint = routePoints[index + 1]
-
-                var bearing = currentPoint.bearingTo(nextPoint).toFloat()
-                if (bearing < 0) bearing += 360f
-
-                // Clamp rotation so it never flips
-                ambulanceMarker?.rotation = bearing
+            var lookAheadIndex = index + 1
+            while (lookAheadIndex < routePoints.size) {
+                val nextPoint = routePoints[lookAheadIndex]
+                val distanceMeters = currentPoint.distanceToAsDouble(nextPoint)
+                if (distanceMeters > 15) {
+                    var bearing = currentPoint.bearingTo(nextPoint).toFloat()
+                    if (bearing > 180) bearing -= (bearing - 180) * 2
+                    ambulanceMarker?.rotation = bearing + 180f
+                    break
+                }
+                lookAheadIndex++
             }
-
             binding.map.invalidate()
         }
-        ambulanceAnimator?.addListener(object : android.animation.AnimatorListenerAdapter() {
-            // Add a flag to track if we cancelled it manually
-            var wasCancelled = false
 
-            override fun onAnimationCancel(animation: android.animation.Animator) {
-                wasCancelled = true
-            }
+        ambulanceAnimator?.addListener(object : AnimatorListenerAdapter() {
+            override fun onAnimationEnd(animation: Animator) {
+                if (!simulationViewModel.isSimulating) return
 
-            override fun onAnimationEnd(animation: android.animation.Animator) {
-                if (!wasCancelled) {
-                    simulationViewModel.isSimulating = false
-                    simulationViewModel.currentPlayTime = 0L
+                // --- ARRIVAL LOGIC ---
+                Toast.makeText(context, "Ambulance Arrived!", Toast.LENGTH_LONG).show()
 
-                    if (_binding != null) {
-                        Toast.makeText(context, "Ambulance Arrived at Location", Toast.LENGTH_LONG).show()
-                    }
+                speak("The ambulance has arrived at your location.")
+                vibratePhone(isArrival = true)
+
+                lifecycleScope.launch {
+                    delay(10000)
+                    resetUI()
                 }
             }
         })
+
         ambulanceAnimator?.start()
     }
 
-    private fun vibratePhone() {
+    private fun restoreUIForEmergency() {
+        binding.btnSOS.visibility = View.GONE
+        binding.btnDrivingMode.visibility = View.GONE
+        binding.btnLogout.visibility = View.GONE
+    }
+
+    private fun resetUI() {
+        if (_binding == null) return
+
+        ambulanceAnimator?.cancel()
+        routeOverlay?.let { binding.map.overlays.remove(it) }
+        ambulanceMarker?.let { binding.map.overlays.remove(it) }
+        binding.map.invalidate()
+
+        simulationViewModel.isSimulating = false
+        simulationViewModel.activeRoad = null
+        simulationViewModel.startTimeMillis = 0L
+
+        binding.btnSOS.visibility = View.VISIBLE
+        binding.btnDrivingMode.visibility = View.VISIBLE
+        binding.btnLogout.visibility = View.VISIBLE
+
+        (activity as? MainActivity)?.onEmergencyFinished()
+    }
+
+    private fun vibratePhone(isArrival: Boolean) {
         val vibrator = if (Build.VERSION.SDK_INT >= 31) {
             val vibratorManager = requireContext().getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as android.os.VibratorManager
             vibratorManager.defaultVibrator
@@ -345,18 +342,18 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
             requireContext().getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         }
 
-        // Vibrate: 500ms ON, 200ms OFF, 500ms ON (SOS Pattern-ish)
-        val pattern = longArrayOf(0, 500, 200, 500)
+        // Pattern: [Delay, Vibrate, Sleep, Vibrate...]
+        // SOS / Start: Long pulses
+        val startPattern = longArrayOf(0, 500, 200, 500)
+        // Arrival: 3 Short pulses
+        val arrivalPattern = longArrayOf(0, 200, 100, 200, 100, 200)
 
-        if (Build.VERSION.SDK_INT >= 26) {
-            // -1 means "Do not repeat"
-            vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1))
-        } else {
-            @Suppress("DEPRECATION")
-            vibrator.vibrate(pattern, -1)
-        }
+        val pattern = if (isArrival) arrivalPattern else startPattern
+
+        vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1))
     }
 
+    // --- STANDARD SETUP ---
     private fun setupMap() {
         binding.map.setMultiTouchControls(true)
         binding.map.isTilesScaledToDpi = true
@@ -379,42 +376,51 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
         binding.map.overlays.add(locationOverlay)
     }
 
+    // --- TTS LOGIC WITH QUEUE ---
     override fun onInit(status: Int) {
-        if (status == TextToSpeech.SUCCESS) tts?.language = Locale.US
+        if (status == TextToSpeech.SUCCESS) {
+            tts?.language = Locale.US
+            isTtsReady = true
+            // If a message tried to play while initializing, play it now
+            pendingTtsMessage?.let {
+                speak(it)
+                pendingTtsMessage = null
+            }
+        }
     }
 
     private fun speak(text: String) {
-        tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
-    }
-
-    override fun onResume() {
-        super.onResume()
-        binding.map.onResume()
-        locationOverlay?.enableMyLocation()
+        if (isTtsReady) {
+            tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
+        } else {
+            pendingTtsMessage = text // Queue it for onInit
+        }
     }
 
     override fun onPause() {
         super.onPause()
         binding.map.onPause()
         locationOverlay?.disableMyLocation()
+        ambulanceAnimator?.pause()
     }
 
     override fun onDestroyView() {
-        if (ambulanceAnimator != null && ambulanceAnimator!!.isRunning) {
-            simulationViewModel.currentPlayTime = ambulanceAnimator!!.currentPlayTime
-            simulationViewModel.isSimulating = true
-            ambulanceAnimator!!.cancel()
-        }
-
+        ambulanceAnimator?.removeAllListeners()
+        ambulanceAnimator?.cancel()
         tts?.shutdown()
         super.onDestroyView()
         _binding = null
     }
-
 }
-class SimulationViewModel : androidx.lifecycle.ViewModel() {
+
+class SimulationViewModel : ViewModel() {
     var activeRoad: Road? = null
     var duration: Long = 0L
-    var currentPlayTime: Long = 0L
+    var startTimeMillis: Long = 0L
     var isSimulating: Boolean = false
+    var isDrivingModeActive: Boolean = false
+
+    var pendingSimulation: Boolean = false
+    var pendingLat: Double = 0.0
+    var pendingLon: Double = 0.0
 }

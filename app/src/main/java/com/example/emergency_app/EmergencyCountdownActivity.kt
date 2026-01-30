@@ -6,11 +6,10 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.telephony.SmsManager
-import android.widget.Button
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import com.example.emergency_app.databinding.ActivityCountdownBinding
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.firebase.auth.FirebaseAuth
@@ -23,8 +22,7 @@ class EmergencyCountdownActivity : AppCompatActivity() {
     // Set to FALSE before pushing to GitHub.
     private val testMode = true
 
-    private lateinit var tvCountdown: TextView
-    private lateinit var btnCancel: Button
+    private lateinit var binding: ActivityCountdownBinding
     private var timer: CountDownTimer? = null
 
     private lateinit var db: FirebaseFirestore
@@ -36,10 +34,8 @@ class EmergencyCountdownActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setShowWhenLocked(true)
         setTurnScreenOn(true)
-        setContentView(R.layout.activity_countdown)
-
-        tvCountdown = findViewById(R.id.tvCountdown)
-        btnCancel = findViewById(R.id.btnCancel)
+        binding = ActivityCountdownBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         db = FirebaseFirestore.getInstance()
         auth = FirebaseAuth.getInstance()
@@ -47,10 +43,9 @@ class EmergencyCountdownActivity : AppCompatActivity() {
         fetchEmergencyContacts()
         startTimer()
 
-        btnCancel.setOnClickListener {
+        binding.btnCancel.setOnClickListener {
             timer?.cancel()
             Toast.makeText(this, "Alert Cancelled", Toast.LENGTH_SHORT).show()
-//            finish()
             navigateBack()
         }
     }
@@ -76,7 +71,7 @@ class EmergencyCountdownActivity : AppCompatActivity() {
         // Reduced to 5 seconds for testing purposes (Change back to 30000 later)
         timer = object : CountDownTimer(5000, 1000) {
             override fun onTick(millisUntilFinished: Long) {
-                tvCountdown.text = (millisUntilFinished / 1000).toString()
+                binding.tvCountdown.text = (millisUntilFinished / 1000).toString()
             }
 
             override fun onFinish() {
@@ -151,6 +146,7 @@ class EmergencyCountdownActivity : AppCompatActivity() {
         intent.putExtra("CRASH_LAT", latitude) // Pass Data
         intent.putExtra("CRASH_LON", longitude) // Pass Data
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        setResult(RESULT_OK)
         startActivity(intent)
         finish()
     }

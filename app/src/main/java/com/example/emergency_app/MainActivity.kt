@@ -10,14 +10,21 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
+import com.example.emergency_app.databinding.ActivityMainBinding
 import com.example.emergency_app.ui.emergency_contact.EmergencyContactFragment
 import com.example.emergency_app.ui.home.HomeFragment
+import com.example.emergency_app.ui.home.SimulationViewModel
 import com.example.emergency_app.ui.medical_info.MedicalInfoFragment
-import com.google.android.material.bottomnavigation.BottomNavigationView
-import androidx.lifecycle.ViewModelProvider
 import com.example.emergency_app.ui.medical_info.MedicalViewModel
 
 class MainActivity : AppCompatActivity() {
+
+    private lateinit var binding: ActivityMainBinding
+
+    private val homeFragment = HomeFragment()
+    private val medicalInfoFragment = MedicalInfoFragment()
+    private val emergencyContactFragment = EmergencyContactFragment()
 
     private val requiredPermissions = mutableListOf(
         Manifest.permission.ACCESS_FINE_LOCATION,
@@ -26,6 +33,9 @@ class MainActivity : AppCompatActivity() {
     ).apply {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             add(Manifest.permission.POST_NOTIFICATIONS)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            add(Manifest.permission.FOREGROUND_SERVICE_LOCATION)
         }
     }
     // Permission Launcher
@@ -41,21 +51,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         ViewModelProvider(this)[MedicalViewModel::class.java]
 
-        val bottomNavigationView: BottomNavigationView = findViewById(R.id.bottomNavigationView)
-
-        val homeFragment = HomeFragment()
-        val medicalInfoFragment = MedicalInfoFragment()
-        val emergencyContactFragment = EmergencyContactFragment()
-
         setCurrentFragment(homeFragment)
 
-        bottomNavigationView.setOnItemSelectedListener { item ->
+        binding.bottomNavigationView.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.home -> setCurrentFragment(homeFragment)
                 R.id.medical_info -> setCurrentFragment(medicalInfoFragment)
@@ -88,12 +92,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun startServiceIntent() {
         val intent = Intent(this, AccidentDetectionService::class.java)
-        // Android 8.0+ requires startForegroundService
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(intent)
-        } else {
-            startService(intent)
-        }
+        startForegroundService(intent)
         Toast.makeText(this, "Driving Mode Started!", Toast.LENGTH_SHORT).show()
     }
 
@@ -117,22 +116,17 @@ class MainActivity : AppCompatActivity() {
             val lat = intent.getDoubleExtra("CRASH_LAT", 0.0)
             val lon = intent.getDoubleExtra("CRASH_LON", 0.0)
 
-            val currentFragment = supportFragmentManager.findFragmentById(R.id.flFragment)
+            val simulationViewModel = ViewModelProvider(this)[SimulationViewModel::class.java]
+            simulationViewModel.pendingSimulation = true
+            simulationViewModel.pendingLat = lat
+            simulationViewModel.pendingLon = lon
 
-            if (currentFragment is HomeFragment) {
-                // Pass coordinates to the function
-                currentFragment.triggerRealAmbulanceSimulation(lat, lon)
-            } else {
-                val homeFragment = HomeFragment()
-                val bundle = Bundle()
-                bundle.putBoolean("START_SIMULATION", true)
-                bundle.putDouble("CRASH_LAT", lat) // Put in bundle
-                bundle.putDouble("CRASH_LON", lon) // Put in bundle
-                homeFragment.arguments = bundle
-
-                setCurrentFragment(homeFragment)
-                findViewById<BottomNavigationView>(R.id.bottomNavigationView).selectedItemId = R.id.home
-            }
+            binding.bottomNavigationView.selectedItemId = R.id.home
         }
+    }
+
+    fun onEmergencyFinished() {
+        stopDrivingMode()
+        ViewModelProvider(this)[SimulationViewModel::class.java].isDrivingModeActive = false
     }
 }

@@ -1,9 +1,11 @@
 package com.example.emergency_app
 
+import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.hardware.Sensor
 import android.hardware.SensorEvent
@@ -11,6 +13,8 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
+import com.google.android.gms.location.LocationServices
 import kotlin.math.sqrt
 
 class AccidentDetectionService : Service(), SensorEventListener {
@@ -18,9 +22,8 @@ class AccidentDetectionService : Service(), SensorEventListener {
     private lateinit var sensorManager: SensorManager
     private var accelerometer: Sensor? = null
 
-    // Threshold: 8G is good.
-    // (1G = sitting still. 3-4G = hard braking. 8G+ = crash/drop)
-    private val crashThreshold = 2.0
+    // Threshold: 5G is a good balance for accidents
+    private val crashThreshold = 5.0
 
     override fun onCreate() {
         super.onCreate()
@@ -55,14 +58,27 @@ class AccidentDetectionService : Service(), SensorEventListener {
     }
 
     private fun triggerEmergencyCountdown() {
+        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                startCountdownActivity(location?.latitude ?: 0.0, location?.longitude ?: 0.0)
+            }.addOnFailureListener {
+                startCountdownActivity(0.0, 0.0)
+            }
+        } else {
+            startCountdownActivity(0.0, 0.0)
+        }
+    }
+
+    private fun startCountdownActivity(lat: Double, lon: Double) {
         val intent = Intent(this, EmergencyCountdownActivity::class.java).apply {
-            // NEW_TASK is required when starting Activity from Service
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            putExtra("CRASH_LAT", lat)
+            putExtra("CRASH_LON", lon)
         }
         startActivity(intent)
-
-        // Optional: Stop the service so the notification goes away
-        // stopSelf()
+        stopSelf()
     }
 
     private fun startForegroundServiceNotification() {
