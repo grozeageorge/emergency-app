@@ -37,12 +37,13 @@ import org.osmdroid.bonuspack.routing.RoadManager
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
-import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polyline
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import java.util.Locale
+import androidx.core.graphics.toColorInt
+import androidx.fragment.app.activityViewModels
 
 class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
 
@@ -57,6 +58,12 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
     // Utilities
     private var tts: TextToSpeech? = null
     private var isDrivingModeActive = false
+
+    private val simulationViewModel: SimulationViewModel by activityViewModels()
+
+
+
+    private var ambulanceAnimator: ValueAnimator? = null
 
     // Permission Launcher
     private val requestPermissionLauncher =
@@ -113,7 +120,7 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
                 isDrivingModeActive = true
 
                 binding.btnDrivingMode.text = getString(R.string.stop_driving)
-                binding.btnDrivingMode.setBackgroundColor(Color.parseColor("#D32F2F")) // Red
+                binding.btnDrivingMode.setBackgroundColor("#D32F2F".toColorInt()) // Red
                 binding.btnDrivingMode.setTextColor(Color.BLACK)
                 binding.btnDrivingMode.strokeWidth = 0
                 binding.btnDrivingMode.setIconResource(android.R.drawable.ic_media_pause)
@@ -125,7 +132,7 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
 
                 binding.btnDrivingMode.text = getString(R.string.start_driving)
                 binding.btnDrivingMode.setBackgroundColor(Color.WHITE)
-                binding.btnDrivingMode.setTextColor(Color.parseColor("#D32F2F"))
+                binding.btnDrivingMode.setTextColor("#D32F2F".toColorInt())
                 binding.btnDrivingMode.strokeColor = ContextCompat.getColorStateList(requireContext(), R.color.header_red) // Or Color.parseColor("#D32F2F")
                 binding.btnDrivingMode.strokeWidth = 5
                 binding.btnDrivingMode.setIconResource(R.drawable.ic_car)
@@ -154,10 +161,24 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
                 triggerRealAmbulanceSimulation(lat, lon)
             }, 1000)
         }
+
+        if (simulationViewModel.isSimulating && simulationViewModel.activeRoad != null) {
+            // Restore the map visualization without re-calculating the route
+            drawRouteAndStartAnimation(
+                simulationViewModel.activeRoad!!,
+                simulationViewModel.duration,
+                simulationViewModel.currentPlayTime
+            )
+        }
     }
 
     // --- 1. ROUTING SETUP ---
     fun triggerRealAmbulanceSimulation(lat: Double = 0.0, lon: Double = 0.0) {
+        if (simulationViewModel.isSimulating) {
+            Toast.makeText(context, "Crash confirmed! Ambulance is already en route.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         speak("Help is on the way. Calculating route from nearest hospital.")
         vibratePhone()
 
@@ -201,53 +222,80 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
             withContext(Dispatchers.Main) {
                 if (road.mStatus != Road.STATUS_OK) {
                     Toast.makeText(context, "Error finding road", Toast.LENGTH_SHORT).show()
+                } else {
+                    // SAVE DATA TO VIEWMODEL
+                    simulationViewModel.activeRoad = road
+                    simulationViewModel.duration = durationMs
+                    simulationViewModel.isSimulating = true
+                    simulationViewModel.currentPlayTime = 0L // Reset time for new simulation
+
+                    // Call the visual function
+                    drawRouteAndStartAnimation(road, durationMs, 0L)
                 }
-
-                // Clean up & Draw Route
-                routeOverlay?.let { binding.map.overlays.remove(it) }
-                ambulanceMarker?.let { binding.map.overlays.remove(it) }
-
-                routeOverlay = RoadManager.buildRoadOverlay(road)
-                routeOverlay?.outlinePaint?.color = Color.RED
-                routeOverlay?.outlinePaint?.strokeWidth = 15f
-                binding.map.overlays.add(routeOverlay)
-
-                // Add Ambulance
-                ambulanceMarker = Marker(binding.map).apply {
-                    position = startPoint
-                    icon = ContextCompat.getDrawable(requireContext(), R.drawable.ic_ambulance)
-                    title = hospitalName
-
-                    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
-
-                    // Keep things simple and stable
-                    isFlat = false
-                    rotation = 0f
-                }
-                binding.map.overlays.add(ambulanceMarker)
-
-                binding.map.zoomToBoundingBox(road.mBoundingBox, true)
-                binding.map.invalidate()
-
-                // 3. Animate with REALISTIC Duration
-                Toast.makeText(context, "Ambulance dispatched. ETA: $etaString", Toast.LENGTH_LONG).show()
-                animateCarAlongRoad(road, durationMs)
             }
         }
     }
 
+    private fun drawRouteAndStartAnimation(road: Road, durationMs: Long, startTime: Long) {
+        // 1. Clean up old overlays
+        routeOverlay?.let { binding.map.overlays.remove(it) }
+        ambulanceMarker?.let { binding.map.overlays.remove(it) }
+
+        // 2. Draw Route
+        routeOverlay = RoadManager.buildRoadOverlay(road)
+        routeOverlay?.outlinePaint?.color = Color.RED
+        routeOverlay?.outlinePaint?.strokeWidth = 15f
+        binding.map.overlays.add(routeOverlay)
+
+        // 3. Draw Marker
+        val startPoint = road.mRouteHigh.first()
+        ambulanceMarker = Marker(binding.map).apply {
+            position = startPoint
+            icon = ContextCompat.getDrawable(requireContext(), R.drawable.ic_ambulance)
+            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+            isFlat = false
+        }
+        binding.map.overlays.add(ambulanceMarker)
+
+        if (startTime == 0L) {
+            binding.map.zoomToBoundingBox(road.mBoundingBox, true)
+        } else {
+            binding.map.controller.setZoom(17.0)
+
+            val progress = startTime.toFloat() / durationMs
+            val validProgress = progress.coerceIn(0f, 1f)
+
+            val points = road.mRouteHigh
+            if (points.isNotEmpty()) {
+                val index = (points.size * validProgress).toInt().coerceAtMost(points.size - 1)
+                val currentPos = points[index]
+
+                binding.map.controller.setCenter(currentPos)
+            }
+        }
+        binding.map.invalidate()
+
+        // 5. Start Animation logic
+        animateCarAlongRoad(road, durationMs, startTime)
+    }
+
     // --- 2. ANIMATION & TANGENT ROTATION ---
-    private fun animateCarAlongRoad(road: Road, durationMs: Long) {
+    private fun animateCarAlongRoad(road: Road, durationMs: Long, startTime: Long) {
         val routePoints = road.mRouteHigh
         if (routePoints.isEmpty()) return
 
         val finalDuration = if (durationMs < 3000) 3000 else durationMs
 
-        val animator = ValueAnimator.ofInt(0, routePoints.size - 1)
-        animator.duration = finalDuration
-        animator.interpolator = LinearInterpolator()
+        ambulanceAnimator = ValueAnimator.ofInt(0, routePoints.size - 1)
+        ambulanceAnimator?.duration = finalDuration
+        ambulanceAnimator?.interpolator = LinearInterpolator()
+        ambulanceAnimator?.currentPlayTime = startTime
 
-        animator.addUpdateListener { animation ->
+        ambulanceAnimator?.addUpdateListener { animation ->
+            if (_binding == null) {
+                ambulanceAnimator?.cancel()
+                return@addUpdateListener
+            }
             val index = animation.animatedValue as Int
             val currentPoint = routePoints[index]
 
@@ -266,8 +314,26 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
 
             binding.map.invalidate()
         }
+        ambulanceAnimator?.addListener(object : android.animation.AnimatorListenerAdapter() {
+            // Add a flag to track if we cancelled it manually
+            var wasCancelled = false
 
-        animator.start()
+            override fun onAnimationCancel(animation: android.animation.Animator) {
+                wasCancelled = true
+            }
+
+            override fun onAnimationEnd(animation: android.animation.Animator) {
+                if (!wasCancelled) {
+                    simulationViewModel.isSimulating = false
+                    simulationViewModel.currentPlayTime = 0L
+
+                    if (_binding != null) {
+                        Toast.makeText(context, "Ambulance Arrived at Location", Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
+        })
+        ambulanceAnimator?.start()
     }
 
     private fun vibratePhone() {
@@ -291,7 +357,6 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
         }
     }
 
-    // --- STANDARD SETUP ---
     private fun setupMap() {
         binding.map.setMultiTouchControls(true)
         binding.map.isTilesScaledToDpi = true
@@ -335,8 +400,21 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
     }
 
     override fun onDestroyView() {
-        super.onDestroyView()
+        if (ambulanceAnimator != null && ambulanceAnimator!!.isRunning) {
+            simulationViewModel.currentPlayTime = ambulanceAnimator!!.currentPlayTime
+            simulationViewModel.isSimulating = true
+            ambulanceAnimator!!.cancel()
+        }
+
         tts?.shutdown()
+        super.onDestroyView()
         _binding = null
     }
+
+}
+class SimulationViewModel : androidx.lifecycle.ViewModel() {
+    var activeRoad: Road? = null
+    var duration: Long = 0L
+    var currentPlayTime: Long = 0L
+    var isSimulating: Boolean = false
 }
