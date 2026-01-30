@@ -25,11 +25,9 @@ class AccidentDetectionService : Service(), SensorEventListener {
     override fun onCreate() {
         super.onCreate()
 
-        // 1. Initialize Sensors
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
 
-        // 2. Start Foreground immediately (Crucial for Android 14+)
         startForegroundServiceNotification()
 
         // 3. Register Listener

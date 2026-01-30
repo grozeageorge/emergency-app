@@ -50,7 +50,8 @@ class EmergencyCountdownActivity : AppCompatActivity() {
         btnCancel.setOnClickListener {
             timer?.cancel()
             Toast.makeText(this, "Alert Cancelled", Toast.LENGTH_SHORT).show()
-            finish()
+//            finish()
+            navigateBack()
         }
     }
 
@@ -88,8 +89,7 @@ class EmergencyCountdownActivity : AppCompatActivity() {
         // 1. Check Permissions
         if (!testMode && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             Toast.makeText(this, "Location permission missing!", Toast.LENGTH_SHORT).show()
-            // Even if permission is missing, we should probably go back to home?
-            // For now, let's just return to avoid crash.
+            navigateBack()
             return
         }
 
@@ -136,6 +136,13 @@ class EmergencyCountdownActivity : AppCompatActivity() {
                 if (testMode) Toast.makeText(this, "Location failed", Toast.LENGTH_SHORT).show()
                 navigateBackAndStartSimulation(0.0, 0.0)
             }
+    }
+
+    private fun navigateBack()
+    {
+        val intent = Intent(this, MainActivity::class.java)
+        startActivity(intent)
+        finish()
     }
 
     private fun navigateBackAndStartSimulation(latitude: Double, longitude: Double) {
