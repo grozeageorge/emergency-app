@@ -18,6 +18,7 @@ constraintlayout = "2.2.1"
 osmdroid = "6.1.18"
 playServicesLocation = "21.3.0"
 osmbonuspack = "6.9.0"
+playServicesMaps = "20.0.0"
 
 
 [libraries]
@@ -47,6 +48,7 @@ androidx-constraintlayout = { group = "androidx.constraintlayout", name = "const
 osmdroid = { module = "org.osmdroid:osmdroid-android", version.ref = "osmdroid" }
 play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
 osmbonuspack = { module = "com.github.MKergall:osmbonuspack", version.ref = "osmbonuspack" }
+play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "playServicesMaps" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
