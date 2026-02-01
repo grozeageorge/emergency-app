@@ -7,9 +7,9 @@ import com.example.emergency_app.R
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Overlay
+import androidx.core.graphics.withTranslation
 
 class VehicleOverlay(
-    private val mapView: MapView,
     context: Context
 ) : Overlay() {
 
@@ -35,24 +35,22 @@ class VehicleOverlay(
 
         val bitmap = if (shouldFlip) vehicleBitmapFlipped else vehicleBitmap
 
-        canvas.save()
+        canvas.withTranslation(point.x.toFloat(), point.y.toFloat()) {
 
-        // Move origin to vehicle position
-        canvas.translate(point.x.toFloat(), point.y.toFloat())
+            // Move origin to vehicle position
+            // Correct rotation:
+            // If flipped, subtract 180 so it doesn't go upside down
+            val rotation = bearing //if (shouldFlip) bearing - 180f else bearing
+            rotate(rotation)
 
-        // Correct rotation:
-        // If flipped, subtract 180 so it doesn't go upside down
-        val rotation = bearing //if (shouldFlip) bearing - 180f else bearing
-        canvas.rotate(rotation)
+            // Draw centered
+            drawBitmap(
+                bitmap,
+                -bitmap.width / 2f,
+                -bitmap.height / 2f,
+                paint
+            )
 
-        // Draw centered
-        canvas.drawBitmap(
-            bitmap,
-            -bitmap.width / 2f,
-            -bitmap.height / 2f,
-            paint
-        )
-
-        canvas.restore()
+        }
     }
 }

@@ -87,7 +87,6 @@ class MainActivity : AppCompatActivity() {
     fun stopDrivingMode() {
         val intent = Intent(this, AccidentDetectionService::class.java)
         stopService(intent)
-        Toast.makeText(this, "Driving Mode Stopped", Toast.LENGTH_SHORT).show()
     }
 
     private fun startServiceIntent() {

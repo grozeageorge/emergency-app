@@ -104,7 +104,7 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
         updateDrivingModeButtonUI()
 
         // 1. Initialize Vehicle Overlay (The Ambulance)
-        vehicleOverlay = VehicleOverlay(binding.map, requireContext())
+        vehicleOverlay = VehicleOverlay(requireContext())
         binding.map.overlays.add(vehicleOverlay)
 
         // 2. SOS Button
