@@ -9,11 +9,13 @@ import android.telephony.SmsManager
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
 import com.example.emergency_app.databinding.ActivityCountdownBinding
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import android.app.NotificationManager
 
 class EmergencyCountdownActivity : AppCompatActivity() {
 
@@ -76,12 +78,34 @@ class EmergencyCountdownActivity : AppCompatActivity() {
 
             override fun onFinish() {
                 sendEmergencySMS()
+                showMedicalNotification()
             }
         }.start()
     }
 
+    private fun showMedicalNotification() {
+        val sharedPref = getSharedPreferences("EmergencyLocalPrefs", MODE_PRIVATE)
+        val medicalInfo = sharedPref.getString("LOCK_SCREEN_INFO", "No Medical Info Set")!!
+
+        val channelId = "crash_detection_channel"
+
+        val emergencyNotification = NotificationCompat.Builder(this, channelId)
+            .setContentTitle("CRASH DETECTED - MEDICAL INFO")
+            .setContentText(medicalInfo)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(medicalInfo))
+            .setSmallIcon(android.R.drawable.ic_menu_compass)
+
+            .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setOngoing(true)
+            .build()
+
+
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        notificationManager.notify(1, emergencyNotification)
+    }
+
     private fun sendEmergencySMS() {
-        // 1. Check Permissions
         if (!testMode && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             Toast.makeText(this, "Location permission missing!", Toast.LENGTH_SHORT).show()
             navigateBack()
@@ -121,13 +145,10 @@ class EmergencyCountdownActivity : AppCompatActivity() {
                 if (location != null) {
                     navigateBackAndStartSimulation(location.latitude, location.longitude)
                 } else {
-                    // Send 0.0, 0.0 as a signal "I don't know where I am"
-                    // HomeFragment will handle this by checking its own map overlay
                     navigateBackAndStartSimulation(0.0, 0.0)
                 }
             }
             .addOnFailureListener {
-                // If Google Play Services fails completely, still go back
                 if (testMode) Toast.makeText(this, "Location failed", Toast.LENGTH_SHORT).show()
                 navigateBackAndStartSimulation(0.0, 0.0)
             }

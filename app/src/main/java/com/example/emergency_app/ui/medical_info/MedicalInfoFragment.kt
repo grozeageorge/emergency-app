@@ -31,7 +31,6 @@ class MedicalInfoFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Initialize Firebase
         db = FirebaseFirestore.getInstance()
         auth = FirebaseAuth.getInstance()
 
@@ -103,8 +102,18 @@ class MedicalInfoFragment : Fragment() {
             .addOnFailureListener {
                 Toast.makeText(context, "Failed to save data", Toast.LENGTH_SHORT).show()
             }
+        saveToLocalPreferences()
     }
+    private fun saveToLocalPreferences() {
+        val summary = "Name: ${binding.etFullName.text} | Blood: ${binding.etBloodType.text} | Allergies: ${binding.etAllergies.text
+        } | Medications: ${binding.etMedications.text} | Conditions: ${binding.etConditions.text} "
 
+        val sharedPref = requireContext().getSharedPreferences("EmergencyLocalPrefs", android.content.Context.MODE_PRIVATE)
+        with (sharedPref.edit()) {
+            putString("LOCK_SCREEN_INFO", summary)
+            apply() // Writes to disk immediately
+        }
+    }
     private fun populateFields(data: Map<String, Any>) {
         binding.apply {
             // The 'data' map comes from the ViewModel (which got it from Firestore)

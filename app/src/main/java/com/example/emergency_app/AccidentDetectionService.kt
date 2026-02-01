@@ -19,6 +19,7 @@ import kotlin.math.sqrt
 
 class AccidentDetectionService : Service(), SensorEventListener {
 
+
     private lateinit var sensorManager: SensorManager
     private var accelerometer: Sensor? = null
 
@@ -78,28 +79,23 @@ class AccidentDetectionService : Service(), SensorEventListener {
             putExtra("CRASH_LON", lon)
         }
         startActivity(intent)
-        stopSelf()
+        //stopSelf()
     }
 
     private fun startForegroundServiceNotification() {
         val channelId = "crash_detection_channel"
         val channelName = "Accident Detection"
 
-        // Create Channel (Required for Android O+)
         val channel = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_LOW)
         getSystemService(NotificationManager::class.java)?.createNotificationChannel(channel)
 
-        // Notification UI
         val notification = NotificationCompat.Builder(this, channelId)
             .setContentTitle("Driving Mode Active")
             .setContentText("Monitoring for accidents...")
-            // USE YOUR APP ICON HERE if ic_launcher_foreground doesn't exist
             .setSmallIcon(android.R.drawable.ic_menu_compass)
-            .setOngoing(true) // Prevents user from swiping it away easily
+            .setOngoing(true)
             .build()
 
-        // Start Foreground
-        // Android 14 (API 34) requires specifying the type if defined in Manifest
         startForeground(1, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
     }
 
@@ -107,7 +103,6 @@ class AccidentDetectionService : Service(), SensorEventListener {
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
 
     override fun onDestroy() {
-        // Always unregister to save battery
         sensorManager.unregisterListener(this)
         super.onDestroy()
     }
