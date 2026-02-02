@@ -2,6 +2,7 @@ package com.example.emergency_app.ui.home
 
 import VehicleOverlay
 import android.Manifest
+
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
@@ -20,6 +21,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.animation.LinearInterpolator
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -55,7 +57,7 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
 
     // Map Components
     private var locationOverlay: MyLocationNewOverlay? = null
-    private lateinit var vehicleOverlay: VehicleOverlay // Your custom ambulance
+    private lateinit var vehicleOverlay: VehicleOverlay
     private var routeOverlay: Polyline? = null
 
     // Utilities
@@ -67,18 +69,30 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
 
     // Animation Handlers
     private var animationHandler: Handler? = null
-    private var animationRunnable : Runnable? = null
+    private var animationRunnable: Runnable? = null
 
-    private val requestPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
-            if (isGranted) enableUserLocation()
+    private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
+    private lateinit var sosResultLauncher: ActivityResultLauncher<Intent>
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        requestPermissionLauncher = registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { isGranted ->
+            if (isGranted) {
+                enableUserLocation()
+            } else {
+                Toast.makeText(requireContext(), "Location permission denied", Toast.LENGTH_SHORT).show()
+            }
         }
 
-    private val sosResultLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            triggerRealAmbulanceSimulation()
+        sosResultLauncher = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                triggerRealAmbulanceSimulation()
+            }
         }
     }
 
@@ -103,17 +117,17 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
         tts = TextToSpeech(requireContext(), this)
         updateDrivingModeButtonUI()
 
-        // 1. Initialize Vehicle Overlay (The Ambulance)
-        vehicleOverlay = VehicleOverlay(requireContext())
-        binding.map.overlays.add(vehicleOverlay)
 
-        // 2. SOS Button
+        vehicleOverlay = VehicleOverlay(requireContext())
+        if (!binding.map.overlays.contains(vehicleOverlay)) {
+            binding.map.overlays.add(vehicleOverlay)
+        }
+
         binding.btnSOS.setOnClickListener {
             val intent = Intent(requireContext(), EmergencyCountdownActivity::class.java)
             sosResultLauncher.launch(intent)
         }
 
-        // 3. Driving Mode Button
         binding.btnDrivingMode.setOnClickListener {
             val mainActivity = activity as? MainActivity ?: return@setOnClickListener
             simulationViewModel.isDrivingModeActive = !simulationViewModel.isDrivingModeActive
@@ -125,7 +139,6 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
             updateDrivingModeButtonUI()
         }
 
-        // 4. Logout
         binding.btnLogout.setOnClickListener {
             FirebaseAuth.getInstance().signOut()
             val intent = Intent(requireActivity(), LoginActivity::class.java)
@@ -140,13 +153,11 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
         locationOverlay?.enableMyLocation()
         updateDrivingModeButtonUI()
 
-        // Check if we need to trigger simulation from Driving Mode Crash
         if (simulationViewModel.pendingSimulation) {
             simulationViewModel.pendingSimulation = false
             triggerRealAmbulanceSimulation(simulationViewModel.pendingLat, simulationViewModel.pendingLon)
         }
 
-        // Restore animation state if switching tabs
         if (simulationViewModel.isSimulating && simulationViewModel.activeRoad != null) {
             val now = System.currentTimeMillis()
             val elapsedTime = now - simulationViewModel.startTimeMillis
@@ -174,6 +185,13 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
         vibratePhone(isArrival = false)
         restoreUIForEmergency()
 
+        // Turn OFF Driving Mode logic if it was on (to prevent double triggers)
+        if (simulationViewModel.isDrivingModeActive) {
+            simulationViewModel.isDrivingModeActive = false
+            (activity as? MainActivity)?.stopDrivingMode()
+            updateDrivingModeButtonUI()
+        }
+
         val userLocation = if (lat != 0.0 && lon != 0.0) GeoPoint(lat, lon) else locationOverlay?.myLocation ?: GeoPoint(44.4268, 26.1025)
 
         lifecycleScope.launch(Dispatchers.IO) {
@@ -181,7 +199,6 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
             var startPoint = GeoPoint(userLocation.latitude + 0.01, userLocation.longitude + 0.01)
 
             try {
-                // Find closest hospital
                 val pois = poiProvider.getPOICloseTo(userLocation, "hospital", 10, 0.1)
                 if (!pois.isNullOrEmpty()) {
                     val closest = pois.minByOrNull { it.mLocation.distanceToAsDouble(userLocation) }
@@ -195,7 +212,6 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
             val waypoints = arrayListOf(startPoint, userLocation)
             val road = roadManager.getRoad(waypoints)
 
-            // Duration calculation
             val distanceKm = road.mLength
             val speedKmh = 50.0
             val timeHours = distanceKm / speedKmh
@@ -206,7 +222,6 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
             withContext(Dispatchers.Main) {
                 if (road.mStatus != Road.STATUS_OK) Toast.makeText(context, "Error finding road", Toast.LENGTH_SHORT).show()
 
-                // Save State
                 simulationViewModel.activeRoad = road
                 simulationViewModel.duration = durationMs
                 simulationViewModel.startTimeMillis = System.currentTimeMillis()
@@ -228,11 +243,12 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
         routeOverlay?.outlinePaint?.strokeWidth = 15f
         binding.map.overlays.add(routeOverlay)
 
-        val startPoint = road.mRouteHigh.first()
-        vehicleOverlay.position = startPoint
-        vehicleOverlay.bearing = 0f // Reset bearing
+        if (::vehicleOverlay.isInitialized) {
+            val startPoint = road.mRouteHigh.first()
+            vehicleOverlay.position = startPoint
+            vehicleOverlay.bearing = 0f
 
-        if (binding.map.overlays.contains(vehicleOverlay)) {
+            // Re-add to ensure it's on top of route
             binding.map.overlays.remove(vehicleOverlay)
             binding.map.overlays.add(vehicleOverlay)
         }
@@ -278,30 +294,34 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
                 val lon = (1 - segmentT) * p0.longitude + segmentT * p1.longitude
                 val currentPos = GeoPoint(lat, lon)
 
+                // Look Ahead Logic
                 var lookAhead = nextIndex
                 var bearing = 0f
-
                 while (lookAhead < routePoints.size) {
                     val candidate = routePoints[lookAhead]
-                    if (currentPos.distanceToAsDouble(candidate) > 8) { // 8 meters look ahead
+                    if (currentPos.distanceToAsDouble(candidate) > 8) {
                         bearing = currentPos.bearingTo(candidate).toFloat()
                         break
                     }
                     lookAhead++
                 }
 
-                vehicleOverlay.position = currentPos
-                vehicleOverlay.bearing = bearing
+                if (::vehicleOverlay.isInitialized) {
+                    vehicleOverlay.position = currentPos
+                    vehicleOverlay.bearing = bearing
+                }
 
                 binding.map.invalidate()
 
                 if (t < 1f) {
-                    animationHandler?.postDelayed(this, 16) // ~60fps
+                    animationHandler?.postDelayed(this, 16)
                 } else {
-                    Toast.makeText(context, "Ambulance Arrived!", Toast.LENGTH_LONG).show()
-                    speak("The ambulance has arrived at your location.")
-                    vibratePhone(isArrival = true)
-
+                    // ARRIVAL
+                    if (_binding != null) {
+                        Toast.makeText(context, "Ambulance Arrived!", Toast.LENGTH_LONG).show()
+                        speak("The ambulance has arrived at your location.")
+                        vibratePhone(isArrival = true)
+                    }
                     lifecycleScope.launch {
                         delay(10000)
                         resetUI()
@@ -309,7 +329,6 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
                 }
             }
         }
-
         animationHandler?.post(animationRunnable!!)
     }
 
@@ -322,28 +341,25 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
     private fun resetUI() {
         if (_binding == null) return
 
-        // Stop animation
         animationHandler?.removeCallbacks(animationRunnable ?: return)
 
-        // Remove Route
         routeOverlay?.let { binding.map.overlays.remove(it) }
 
-        // Hide Vehicle (Set position to null or move off screen)
-        vehicleOverlay.position = null
+        if (::vehicleOverlay.isInitialized) {
+            vehicleOverlay.position = null
+        }
 
         binding.map.invalidate()
 
-        // Reset Data
         simulationViewModel.isSimulating = false
         simulationViewModel.activeRoad = null
         simulationViewModel.startTimeMillis = 0L
 
-        // Show Buttons
         binding.btnSOS.visibility = View.VISIBLE
         binding.btnDrivingMode.visibility = View.VISIBLE
         binding.btnLogout.visibility = View.VISIBLE
 
-        (activity as? MainActivity)?.onEmergencyFinished() // Optional callback if MainActivity needs it
+        updateDrivingModeButtonUI()
     }
 
     private fun updateDrivingModeButtonUI() {
@@ -378,11 +394,8 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
             requireContext().getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         }
 
-        // SOS / Start: Long pulses
         val startPattern = longArrayOf(0, 500, 200, 500)
-        // Arrival: 3 Short pulses
         val arrivalPattern = longArrayOf(0, 200, 100, 200, 100, 200)
-
         val pattern = if (isArrival) arrivalPattern else startPattern
 
         vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1))
@@ -445,6 +458,7 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
         _binding = null
     }
 }
+
 class SimulationViewModel : ViewModel() {
     var activeRoad: Road? = null
     var duration: Long = 0L

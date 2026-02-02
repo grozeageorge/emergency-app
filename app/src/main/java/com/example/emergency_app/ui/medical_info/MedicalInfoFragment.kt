@@ -22,6 +22,7 @@ import androidx.activity.result.ActivityResultLauncher
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import androidx.core.content.edit
 
 
 class MedicalInfoFragment : Fragment() {
@@ -235,10 +236,9 @@ class MedicalInfoFragment : Fragment() {
         val summary = "Name: ${binding.etFullName.text} | Blood: ${binding.etBloodType.text} | Allergies: ${binding.etAllergies.text
         } | Medications: ${binding.etMedications.text} | Conditions: ${binding.etConditions.text} "
 
-        val sharedPref = requireContext().getSharedPreferences("EmergencyLocalPrefs", android.content.Context.MODE_PRIVATE)
-        with (sharedPref.edit()) {
+        val sharedPref = requireContext().getSharedPreferences("EmergencyLocalPrefs", Context.MODE_PRIVATE)
+        sharedPref.edit {
             putString("LOCK_SCREEN_INFO", summary)
-            apply()
         }
     }
     private fun populateFields(data: Map<String, Any>) {

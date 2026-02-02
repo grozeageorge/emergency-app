@@ -154,7 +154,7 @@ class EmergencyCountdownActivity : AppCompatActivity() {
     private fun navigateBack()
     {
         val intent = Intent(this, MainActivity::class.java)
-        Toast.makeText(this, "Location failed", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "Emergency canceled or location failed.", Toast.LENGTH_SHORT).show()
         startActivity(intent)
         finish()
     }
