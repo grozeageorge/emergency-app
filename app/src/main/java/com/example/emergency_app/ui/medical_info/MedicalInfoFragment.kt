@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.lifecycle.ViewModelProvider
+import com.example.emergency_app.R
 import com.example.emergency_app.databinding.FragmentMedicalInfoBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -18,6 +19,9 @@ import java.io.File
 import androidx.activity.result.contract.ActivityResultContracts
 import android.content.SharedPreferences
 import androidx.activity.result.ActivityResultLauncher
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 
 class MedicalInfoFragment : Fragment() {
@@ -54,7 +58,6 @@ class MedicalInfoFragment : Fragment() {
 
         loadProfileImage()
 
-
         db = FirebaseFirestore.getInstance()
         auth = FirebaseAuth.getInstance()
 
@@ -66,6 +69,8 @@ class MedicalInfoFragment : Fragment() {
             }
         }
 
+        setupExpandableSections()
+        setupDatePicker()
         setEditMode(false)
 
         binding.btnEdit.setOnClickListener {
@@ -76,25 +81,123 @@ class MedicalInfoFragment : Fragment() {
             saveMedicalData()
             viewModel.refresh()
         }
+
+        binding.btnCancel.setOnClickListener {
+            setEditMode(false)
+            viewModel.refresh()
+        }
+    }
+
+    private fun setupExpandableSections() {
+        setSectionExpanded(binding.identityContent, binding.identityToggle, true)
+        setSectionExpanded(binding.vitalsContent, binding.vitalsToggle, true)
+        setSectionExpanded(binding.criticalContent, binding.criticalToggle, true)
+        setSectionExpanded(binding.historyContent, binding.historyToggle, true)
+
+        binding.identityHeader.setOnClickListener {
+            toggleSection(binding.identityContent, binding.identityToggle)
+        }
+        binding.vitalsHeader.setOnClickListener {
+            toggleSection(binding.vitalsContent, binding.vitalsToggle)
+        }
+        binding.criticalHeader.setOnClickListener {
+            toggleSection(binding.criticalContent, binding.criticalToggle)
+        }
+        binding.historyHeader.setOnClickListener {
+            toggleSection(binding.historyContent, binding.historyToggle)
+        }
+    }
+
+    private fun toggleSection(content: View, toggleIcon: ImageView) {
+        val isExpanded = content.visibility == View.VISIBLE
+        setSectionExpanded(content, toggleIcon, !isExpanded)
+    }
+
+    private fun setSectionExpanded(content: View, toggleIcon: ImageView, expanded: Boolean) {
+        content.visibility = if (expanded) View.VISIBLE else View.GONE
+        toggleIcon.setImageResource(
+            if (expanded) R.drawable.ic_expand_less_thin else R.drawable.ic_expand_more_thin
+        )
+    }
+
+    private fun setupDatePicker() {
+        val openPickerIfEditable = {
+            if (binding.etDob.isEnabled) {
+                showDatePicker()
+            }
+        }
+
+        binding.etDob.setOnClickListener { openPickerIfEditable() }
+        binding.dobInputLayout.setEndIconOnClickListener { openPickerIfEditable() }
+    }
+
+    private fun showDatePicker() {
+        val calendar = Calendar.getInstance()
+        val datePicker = android.app.DatePickerDialog(
+            requireContext(),
+            { _, year, month, dayOfMonth ->
+                val selected = Calendar.getInstance().apply {
+                    set(Calendar.YEAR, year)
+                    set(Calendar.MONTH, month)
+                    set(Calendar.DAY_OF_MONTH, dayOfMonth)
+                }
+                val formatter = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+                binding.etDob.setText(formatter.format(selected.time))
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        )
+        datePicker.show()
+    }
+
+    private fun updateFieldHints(isEditing: Boolean) {
+        if (isEditing) {
+            binding.etFullName.hint = getString(R.string.full_name_placeholder)
+            binding.etNationalId.hint = getString(R.string.national_id_placeholder)
+            binding.etBloodType.hint = getString(R.string.blood_type_placeholder)
+            binding.etDob.hint = getString(R.string.birth_date_placeholder)
+            binding.etGender.hint = getString(R.string.gender_placeholder)
+            binding.etAllergies.hint = getString(R.string.allergies_placeholder)
+            binding.etMedications.hint = getString(R.string.medications_placeholder)
+            binding.etConditions.hint = getString(R.string.conditions_placeholder)
+            binding.etDevices.hint = getString(R.string.devices_placeholder)
+            binding.etSurgery.hint = getString(R.string.surgery_placeholder)
+            binding.etTestResults.hint = getString(R.string.test_results_placeholder)
+        } else {
+            binding.etFullName.hint = getString(R.string.not_set)
+            binding.etNationalId.hint = getString(R.string.not_set)
+            binding.etBloodType.hint = getString(R.string.not_set)
+            binding.etDob.hint = getString(R.string.not_set)
+            binding.etGender.hint = getString(R.string.not_set)
+            binding.etAllergies.hint = getString(R.string.none_set)
+            binding.etMedications.hint = getString(R.string.none_set)
+            binding.etConditions.hint = getString(R.string.none_set)
+            binding.etDevices.hint = getString(R.string.none_set)
+            binding.etSurgery.hint = getString(R.string.none_set)
+            binding.etTestResults.hint = getString(R.string.none_set)
+        }
     }
 
     private fun setEditMode(isEditing: Boolean) {
         binding.apply {
             val views = listOf(
                 etFullName, etNationalId, etGender, etDob, etBloodType,
-                etOrganDonor, etAllergies, etMedications, etConditions,
+                etAllergies, etMedications, etConditions,
                 etDevices, etSurgery, etTestResults
             )
 
             views.forEach { it.isEnabled = isEditing }
+            switchOrganDonor.isEnabled = isEditing
+            updateFieldHints(isEditing)
 
             if (isEditing) {
                 btnEdit.visibility = View.GONE
-                btnSave.visibility = View.VISIBLE
+                saveCancelRow.visibility = View.VISIBLE
                 etFullName.requestFocus()
             } else {
                 btnEdit.visibility = View.VISIBLE
-                btnSave.visibility = View.GONE
+                saveCancelRow.visibility = View.GONE
             }
         }
     }
@@ -108,7 +211,7 @@ class MedicalInfoFragment : Fragment() {
             "gender" to binding.etGender.text.toString(),
             "dob" to binding.etDob.text.toString(),
             "bloodType" to binding.etBloodType.text.toString(),
-            "organDonor" to binding.etOrganDonor.text.toString(),
+            "organDonor" to if (binding.switchOrganDonor.isChecked) "Yes" else "No",
             "allergies" to binding.etAllergies.text.toString(),
             "medications" to binding.etMedications.text.toString(),
             "conditions" to binding.etConditions.text.toString(),
@@ -140,14 +243,17 @@ class MedicalInfoFragment : Fragment() {
     }
     private fun populateFields(data: Map<String, Any>) {
         binding.apply {
-            // The 'data' map comes from the ViewModel (which got it from Firestore)
-            // We use 'as? String' to safely convert the generic data back to text
             etFullName.setText(data["fullName"] as? String)
             etNationalId.setText(data["nationalId"] as? String)
             etGender.setText(data["gender"] as? String)
             etDob.setText(data["dob"] as? String)
             etBloodType.setText(data["bloodType"] as? String)
-            etOrganDonor.setText(data["organDonor"] as? String)
+            val donorValue = data["organDonor"]
+            switchOrganDonor.isChecked = when (donorValue) {
+                is Boolean -> donorValue
+                is String -> donorValue.equals("yes", ignoreCase = true) || donorValue == "true"
+                else -> false
+            }
             etAllergies.setText(data["allergies"] as? String)
             etMedications.setText(data["medications"] as? String)
             etConditions.setText(data["conditions"] as? String)

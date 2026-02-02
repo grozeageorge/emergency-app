@@ -1,6 +1,6 @@
 <resources>
     <!-- App Core -->
-    <string name="app_name">Emergency App</string>
+    <string name="app_name">EmergencyApp</string>
     <string name="logo">App Logo</string>
     <string name="home">Home</string>
 
@@ -9,14 +9,47 @@
     <string name="medical_information">Medical Info</string>
 
     <!-- Login & Register -->
-    <string name="login">Login</string>
+    <string name="login">Sign In</string>
+    <string name="register">Create Account</string>
     <string name="email">Email</string>
     <string name="password">Password</string>
     <string name="no_account">Don\'t have an account?</string>
-    <string name="register">Register</string>
     <string name="repeat_password">Repeat Password</string>
     <string name="back_to_login">Back to Login</string>
     <string name="welcome">Welcome to\nEmergency App</string>
+
+    <string name="app_tagline">Emergency Medical Response</string>
+    <string name="login_title">Welcome Back</string>
+    <string name="login_subtitle">Sign in to access your medical profile</string>
+    <string name="email_label">Email Address</string>
+    <string name="email_placeholder">your.email@example.com</string>
+    <string name="password_label">Password</string>
+    <string name="password_placeholder">Enter your password</string>
+    <string name="password_min_placeholder">Minimum 6 characters</string>
+    <string name="confirm_password_label">Confirm Password</string>
+    <string name="confirm_password_placeholder">Re-enter your password</string>
+    <string name="create_account_title">Create Account</string>
+    <string name="create_account_subtitle">Join us to secure your medical information</string>
+    <string name="create_account">Create Account</string>
+    <string name="sign_in">Sign In</string>
+    <string name="emergency_footer">For emergency services, dial your local emergency number</string>
+    <string name="terms_text">By creating an account, you agree to our Terms of Service and Privacy Policy</string>
+
+    <!-- Medical Info placeholders -->
+    <string name="full_name_placeholder">Enter full name</string>
+    <string name="national_id_placeholder">Enter national ID</string>
+    <string name="blood_type_placeholder">e.g: O+, A-, AB+</string>
+    <string name="birth_date_placeholder">Select date</string>
+    <string name="gender_placeholder">Male, Female, Other</string>
+    <string name="allergies_placeholder">List any allergies...</string>
+    <string name="medications_placeholder">List current medications...</string>
+    <string name="conditions_placeholder">List any medical conditions...</string>
+    <string name="devices_placeholder">List any medical devices or implants...</string>
+    <string name="surgery_placeholder">List recent surgeries...</string>
+    <string name="test_results_placeholder">List recent test results...</string>
+    <string name="cancel_changes">Cancel</string>
+    <string name="not_set">Not set</string>
+    <string name="none_set">None set</string>
 
     <!-- Home Fragment -->
     <string name="log_out">Log Out</string>
@@ -70,6 +103,8 @@
     <string name="label_phone_number">Phone Number</string>
     <string name="label_priority">Priority</string>
     <string name="label_address">Address</string>
+    <string name="label_full_name_required">Full Name *</string>
+    <string name="label_phone_required">Phone Number *</string>
 
     <!-- Accessibility Descriptions -->
     <string name="desc_edit_contact">Edit contact details</string>
@@ -77,4 +112,20 @@
     <string name="desc_call_contact">Call this contact</string>
     <string name="desc_profile_picture">Profile picture</string>
     <string name="desc_sos">Trigger Emergency SOS</string>
+
+    <!-- Emergency Contacts UI Strings -->
+    <string name="empty_contacts_title">No Emergency Contacts</string>
+    <string name="empty_contacts_subtitle">Add contacts who should be notified in case of an emergency</string>
+    <string name="add_first_contact">Add Your First Contact</string>
+    <string name="add_contact">Add Contact</string>
+    <string name="new_contact_title">New Contact</string>
+    <string name="placeholder_full_name">Enter full name</string>
+    <string name="placeholder_relationship">e.g: Spouse, Parent, Sibling</string>
+    <string name="placeholder_phone">e.g: +1 (555) 000-0000</string>
+    <string name="placeholder_priority">Enter priority number</string>
+    <string name="placeholder_address">Enter full address</string>
+    <string name="edit">Edit</string>
+    <string name="delete">Delete</string>
+    <string name="save">Save</string>
+    <string name="required_fields_message">Full name and phone number are required.</string>
 </resources>

@@ -11,4 +11,29 @@
     <color name="app_background">#121212</color>
     <color name="header_red">#D32F2F</color>
     <color name="card_background">#1E1E1E</color>
+
+    <!-- Auth UI colors -->
+    <color name="auth_background">#FFF5F5</color>
+    <color name="auth_card_background">#FFFFFFFF</color>
+    <color name="auth_text_primary">#1F2937</color>
+    <color name="auth_text_secondary">#6B7280</color>
+    <color name="auth_input_background">#F3F4F6</color>
+    <color name="auth_input_stroke">#E5E7EB</color>
+
+    <!-- Medical info UI colors -->
+    <color name="medical_background">#F7F7F7</color>
+    <color name="medical_card_background">#FFFFFFFF</color>
+    <color name="medical_text_primary">#111827</color>
+    <color name="medical_text_secondary">#6B7280</color>
+    <color name="medical_divider">#F0F1F5</color>
+    <color name="medical_input_background">#F3F4F6</color>
+    <color name="medical_input_stroke">#E5E7EB</color>
+    <color name="medical_identity_icon_bg">#FEE2E2</color>
+    <color name="medical_identity_icon">#EF4444</color>
+    <color name="medical_vitals_icon_bg">#DBEAFE</color>
+    <color name="medical_vitals_icon">#3B82F6</color>
+    <color name="medical_critical_icon_bg">#FEF3C7</color>
+    <color name="medical_critical_icon">#F59E0B</color>
+    <color name="medical_history_icon_bg">#F3E8FF</color>
+    <color name="medical_history_icon">#8B5CF6</color>
 </resources>

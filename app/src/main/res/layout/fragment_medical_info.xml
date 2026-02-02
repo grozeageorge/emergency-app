@@ -3,77 +3,115 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true">
+    android:fillViewport="true"
+    android:background="@color/medical_background">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#121212"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:padding="20dp">
 
-        <FrameLayout
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="180dp">
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:layout_marginBottom="16dp">
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="120dp"
-                android:background="@drawable/rounded_background"/>
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="88dp"
+                android:layout_height="88dp"
+                app:cardCornerRadius="44dp"
+                app:cardElevation="4dp"
+                app:cardBackgroundColor="@color/medical_card_background">
+
+                <ImageView
+                    android:id="@+id/imgProfile"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:contentDescription="@string/profile_picture"
+                    android:src="@android:drawable/ic_menu_camera"
+                    android:scaleType="centerCrop"
+                    android:background="#EEEEEE"/>
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/emergency_medical_id"
+                android:textColor="@color/medical_text_primary"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginTop="10dp"/>
+        </LinearLayout>
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="6dp"
+            app:cardBackgroundColor="@color/medical_card_background">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:gravity="center_horizontal">
-
-                <FrameLayout
-                    android:layout_width="108dp"
-                    android:layout_height="108dp"
-                    android:background="@drawable/circle_shadow"
-                    android:layout_marginTop="5dp">
-
-                    <com.google.android.material.card.MaterialCardView
-                        android:layout_width="100dp"
-                        android:layout_height="100dp"
-                        android:layout_gravity="center"
-                        app:cardCornerRadius="50dp"
-                        app:strokeColor="#FFFFFF"
-                        app:strokeWidth="4dp"
-                        app:cardElevation="0dp">
-                        <ImageView
-                            android:id="@+id/imgProfile"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:contentDescription="@string/profile_picture"
-                            android:src="@android:drawable/ic_menu_camera"
-                            android:scaleType="centerCrop"
-                            android:background="#EEEEEE"/>
-                    </com.google.android.material.card.MaterialCardView>
-                </FrameLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/emergency_medical_id"
-                    android:textColor="#FFFFFF"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:layout_marginTop="10dp"/>
-            </LinearLayout>
-        </FrameLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp">
-
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                style="@style/MedicalCardStyle">
+                android:padding="16dp">
 
                 <LinearLayout
+                    android:id="@+id/identityHeader"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground">
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        app:cardCornerRadius="18dp"
+                        app:cardElevation="0dp"
+                        app:cardBackgroundColor="@color/medical_identity_icon_bg">
+
+                        <ImageView
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:src="@android:drawable/ic_menu_myplaces"
+                            android:padding="8dp"
+                            app:tint="@color/medical_identity_icon"/>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:text="@string/identity"
+                        android:textColor="@color/medical_text_primary"
+                        android:textSize="16sp"
+                        android:textStyle="bold"/>
+
+                    <ImageView
+                        android:id="@+id/identityToggle"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_expand_less_thin"
+                        app:tint="@color/medical_text_secondary"/>
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginBottom="12dp"
+                    android:background="@color/medical_divider"/>
+
+                <LinearLayout
+                    android:id="@+id/identityContent"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
@@ -81,165 +119,136 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/identity"
-                        style="@style/SectionHeaderStyle"/>
+                        android:text="@string/full_name"
+                        android:textColor="@color/medical_text_primary"
+                        android:textSize="13sp"
+                        android:textStyle="bold"/>
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="@string/full_name"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
-                        app:boxStrokeColor="@color/input_border_color"
-                        app:boxStrokeWidth="2dp"
-                        android:textColorHint="@color/input_border_color"
-                        app:hintTextColor="@color/input_border_color"
-                        app:startIconDrawable="@android:drawable/ic_menu_myplaces"
-                        app:startIconTint="@color/input_border_color">
+                        android:layout_marginTop="8dp"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        app:hintEnabled="false"
+                        app:boxBackgroundMode="filled"
+                        app:boxBackgroundColor="@color/medical_input_background"
+                        app:boxStrokeColor="@color/medical_input_stroke"
+                        app:boxStrokeWidth="1dp"
+                        app:boxCornerRadiusTopStart="12dp"
+                        app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp"
+                        app:boxCornerRadiusBottomEnd="12dp">
+
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etFullName"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="textPersonName|textCapWords"
-                            android:textColor="@color/input_border_color"/>
+                            android:hint="@string/full_name_placeholder"
+                            android:textColor="@color/medical_text_primary"/>
                     </com.google.android.material.textfield.TextInputLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/national_id"
+                        android:textColor="@color/medical_text_primary"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:layout_marginTop="12dp"/>
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:hint="@string/national_id"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
-                        app:boxStrokeColor="@color/input_border_color"
-                        app:boxStrokeWidth="2dp"
-                        android:textColorHint="@color/input_border_color"
-                        app:hintTextColor="@color/input_border_color"
-                        app:startIconDrawable="@android:drawable/ic_menu_info_details"
-                        app:startIconTint="@color/input_border_color">
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        app:hintEnabled="false"
+                        app:boxBackgroundMode="filled"
+                        app:boxBackgroundColor="@color/medical_input_background"
+                        app:boxStrokeColor="@color/medical_input_stroke"
+                        app:boxStrokeWidth="1dp"
+                        app:boxCornerRadiusTopStart="12dp"
+                        app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp"
+                        app:boxCornerRadiusBottomEnd="12dp">
+
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etNationalId"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:textColor="@color/input_border_color"/>
+                            android:hint="@string/national_id_placeholder"
+                            android:textColor="@color/medical_text_primary"/>
                     </com.google.android.material.textfield.TextInputLayout>
                 </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
-            <com.google.android.material.card.MaterialCardView
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="6dp"
+            app:cardBackgroundColor="@color/medical_card_background">
+
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                style="@style/MedicalCardStyle">
+                android:orientation="vertical"
+                android:padding="16dp">
 
                 <LinearLayout
+                    android:id="@+id/vitalsHeader"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground">
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        app:cardCornerRadius="18dp"
+                        app:cardElevation="0dp"
+                        app:cardBackgroundColor="@color/medical_vitals_icon_bg">
+
+                        <ImageView
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:src="@android:drawable/btn_star_big_on"
+                            android:padding="8dp"
+                            app:tint="@color/medical_vitals_icon"/>
+                    </com.google.android.material.card.MaterialCardView>
 
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
                         android:text="@string/vitals"
-                        style="@style/SectionHeaderStyle"/>
+                        android:textColor="@color/medical_text_primary"
+                        android:textSize="16sp"
+                        android:textStyle="bold"/>
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal">
-
-                        <com.google.android.material.textfield.TextInputLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:hint="@string/blood"
-                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
-                            app:boxStrokeColor="@color/input_border_color"
-                            app:boxStrokeWidth="2dp"
-                            android:textColorHint="@color/input_border_color"
-                            app:hintTextColor="@color/input_border_color"
-                            app:startIconTint="@color/input_border_color">
-                            <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/etBloodType"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:textColor="@color/input_border_color"/>
-                        </com.google.android.material.textfield.TextInputLayout>
-
-                        <Space android:layout_width="8dp" android:layout_height="wrap_content"/>
-
-                        <com.google.android.material.textfield.TextInputLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1.5"
-                            android:hint="@string/birth_date"
-                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
-                            app:boxStrokeColor="@color/input_border_color"
-                            app:boxStrokeWidth="2dp"
-                            android:textColorHint="@color/input_border_color"
-                            app:hintTextColor="@color/input_border_color"
-                            app:startIconTint="@color/input_border_color">
-                            <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/etDob"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:inputType="date"
-                                android:textColor="@color/input_border_color"/>
-                        </com.google.android.material.textfield.TextInputLayout>
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginTop="8dp">
-
-                        <com.google.android.material.textfield.TextInputLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:hint="@string/gender"
-                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
-                            app:boxStrokeColor="@color/input_border_color"
-                            app:boxStrokeWidth="2dp"
-                            android:textColorHint="@color/input_border_color"
-                            app:hintTextColor="@color/input_border_color"
-                            app:startIconTint="@color/input_border_color">
-                            <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/etGender"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:textColor="@color/input_border_color"/>
-                        </com.google.android.material.textfield.TextInputLayout>
-
-                        <Space android:layout_width="8dp" android:layout_height="wrap_content"/>
-
-                        <com.google.android.material.textfield.TextInputLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:hint="@string/organ_donor"
-                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
-                            app:boxStrokeColor="@color/input_border_color"
-                            app:boxStrokeWidth="2dp"
-                            android:textColorHint="@color/input_border_color"
-                            app:hintTextColor="@color/input_border_color"
-                            app:startIconTint="@color/input_border_color">
-                            <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/etOrganDonor"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:textColor="@color/input_border_color"/>
-                        </com.google.android.material.textfield.TextInputLayout>
-                    </LinearLayout>
+                    <ImageView
+                        android:id="@+id/vitalsToggle"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_expand_less_thin"
+                        app:tint="@color/medical_text_secondary"/>
                 </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
 
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                style="@style/MedicalCardStyle"
-                app:strokeColor="#FFCDD2"
-                app:strokeWidth="1dp">
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginBottom="12dp"
+                    android:background="@color/medical_divider"/>
 
                 <LinearLayout
+                    android:id="@+id/vitalsContent"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
@@ -247,62 +256,335 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/critical_information"
-                        style="@style/SectionHeaderStyle"
-                        android:textColor="#D32F2F"
-                        android:layout_marginBottom="0dp"
-                        android:drawablePadding="8dp"
-                        app:drawableStartCompat="@android:drawable/ic_dialog_alert"
-                        app:drawableTint="#D32F2F"
-                        android:gravity="center_vertical" />
-
-                    <Space android:layout_width="match_parent" android:layout_height="12dp"/>
+                        android:text="@string/blood"
+                        android:textColor="@color/medical_text_primary"
+                        android:textSize="13sp"
+                        android:textStyle="bold"/>
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="@string/allergies"
+                        android:layout_marginTop="8dp"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                        app:boxStrokeColor="@color/input_border_color"
-                        app:boxStrokeWidth="2dp"
-                        android:textColorHint="@color/input_border_color"
-                        app:hintTextColor="@color/input_border_color"
-                        app:startIconTint="@color/input_border_color">
+                        app:hintEnabled="false"
+                        app:boxBackgroundMode="filled"
+                        app:boxBackgroundColor="@color/medical_input_background"
+                        app:boxStrokeColor="@color/medical_input_stroke"
+                        app:boxStrokeWidth="1dp"
+                        app:boxCornerRadiusTopStart="12dp"
+                        app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp"
+                        app:boxCornerRadiusBottomEnd="12dp">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etBloodType"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/blood_type_placeholder"
+                            android:textColor="@color/medical_text_primary"/>
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/birth_date"
+                        android:textColor="@color/medical_text_primary"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:layout_marginTop="12dp"/>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/dobInputLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        app:hintEnabled="false"
+                        app:boxBackgroundMode="filled"
+                        app:boxBackgroundColor="@color/medical_input_background"
+                        app:boxStrokeColor="@color/medical_input_stroke"
+                        app:boxStrokeWidth="1dp"
+                        app:boxCornerRadiusTopStart="12dp"
+                        app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp"
+                        app:boxCornerRadiusBottomEnd="12dp"
+                        app:endIconMode="custom"
+                        app:endIconDrawable="@android:drawable/ic_menu_my_calendar"
+                        app:endIconTint="@color/medical_text_secondary">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etDob"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/birth_date_placeholder"
+                            android:inputType="none"
+                            android:focusable="false"
+                            android:clickable="true"
+                            android:cursorVisible="false"
+                            android:textColor="@color/medical_text_primary"/>
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/gender"
+                        android:textColor="@color/medical_text_primary"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:layout_marginTop="12dp"/>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        app:hintEnabled="false"
+                        app:boxBackgroundMode="filled"
+                        app:boxBackgroundColor="@color/medical_input_background"
+                        app:boxStrokeColor="@color/medical_input_stroke"
+                        app:boxStrokeWidth="1dp"
+                        app:boxCornerRadiusTopStart="12dp"
+                        app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp"
+                        app:boxCornerRadiusBottomEnd="12dp">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etGender"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/gender_placeholder"
+                            android:textColor="@color/medical_text_primary"/>
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/organ_donor"
+                            android:textColor="@color/medical_text_primary"
+                            android:textSize="13sp"
+                            android:textStyle="bold"/>
+
+                        <com.google.android.material.switchmaterial.SwitchMaterial
+                            android:id="@+id/switchOrganDonor"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="6dp"
+            app:cardBackgroundColor="@color/medical_card_background">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <LinearLayout
+                    android:id="@+id/criticalHeader"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground">
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        app:cardCornerRadius="18dp"
+                        app:cardElevation="0dp"
+                        app:cardBackgroundColor="@color/medical_critical_icon_bg">
+
+                        <ImageView
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:src="@android:drawable/ic_dialog_alert"
+                            android:padding="8dp"
+                            app:tint="@color/medical_critical_icon"/>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:text="@string/critical_information"
+                        android:textColor="@color/medical_text_primary"
+                        android:textSize="16sp"
+                        android:textStyle="bold"/>
+
+                    <ImageView
+                        android:id="@+id/criticalToggle"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_expand_less_thin"
+                        app:tint="@color/medical_text_secondary"/>
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginBottom="12dp"
+                    android:background="@color/medical_divider"/>
+
+                <LinearLayout
+                    android:id="@+id/criticalContent"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/allergies"
+                        android:textColor="@color/medical_text_primary"
+                        android:textSize="13sp"
+                        android:textStyle="bold"/>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        app:hintEnabled="false"
+                        app:boxBackgroundMode="filled"
+                        app:boxBackgroundColor="@color/medical_input_background"
+                        app:boxStrokeColor="@color/medical_input_stroke"
+                        app:boxStrokeWidth="1dp"
+                        app:boxCornerRadiusTopStart="12dp"
+                        app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp"
+                        app:boxCornerRadiusBottomEnd="12dp">
+
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etAllergies"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:hint="@string/allergies_placeholder"
                             android:inputType="textMultiLine"
-                            android:textColor="@color/input_border_color"/>
+                            android:textColor="@color/medical_text_primary"/>
                     </com.google.android.material.textfield.TextInputLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/current_medications"
+                        android:textColor="@color/medical_text_primary"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:layout_marginTop="12dp"/>
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:hint="@string/current_medications"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                        app:boxStrokeColor="@color/input_border_color"
-                        app:boxStrokeWidth="2dp"
-                        android:textColorHint="@color/input_border_color"
-                        app:hintTextColor="@color/input_border_color"
-                        app:startIconTint="@color/input_border_color">
+                        app:hintEnabled="false"
+                        app:boxBackgroundMode="filled"
+                        app:boxBackgroundColor="@color/medical_input_background"
+                        app:boxStrokeColor="@color/medical_input_stroke"
+                        app:boxStrokeWidth="1dp"
+                        app:boxCornerRadiusTopStart="12dp"
+                        app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp"
+                        app:boxCornerRadiusBottomEnd="12dp">
+
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etMedications"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:hint="@string/medications_placeholder"
                             android:inputType="textMultiLine"
-                            android:textColor="@color/input_border_color"/>
+                            android:textColor="@color/medical_text_primary"/>
                     </com.google.android.material.textfield.TextInputLayout>
                 </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
-            <com.google.android.material.card.MaterialCardView
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="6dp"
+            app:cardBackgroundColor="@color/medical_card_background">
+
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                style="@style/MedicalCardStyle">
+                android:orientation="vertical"
+                android:padding="16dp">
 
                 <LinearLayout
+                    android:id="@+id/historyHeader"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground">
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        app:cardCornerRadius="18dp"
+                        app:cardElevation="0dp"
+                        app:cardBackgroundColor="@color/medical_history_icon_bg">
+
+                        <ImageView
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:src="@android:drawable/ic_menu_agenda"
+                            android:padding="8dp"
+                            app:tint="@color/medical_history_icon"/>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:text="@string/history_and_results"
+                        android:textColor="@color/medical_text_primary"
+                        android:textSize="16sp"
+                        android:textStyle="bold"/>
+
+                    <ImageView
+                        android:id="@+id/historyToggle"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_expand_less_thin"
+                        app:tint="@color/medical_text_secondary"/>
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginBottom="12dp"
+                    android:background="@color/medical_divider"/>
+
+                <LinearLayout
+                    android:id="@+id/historyContent"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
@@ -310,111 +592,186 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/history_and_results"
-                        style="@style/SectionHeaderStyle"/>
+                        android:text="@string/medical_conditions"
+                        android:textColor="@color/medical_text_primary"
+                        android:textSize="13sp"
+                        android:textStyle="bold"/>
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="@string/medical_conditions"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
-                        app:boxStrokeColor="@color/input_border_color"
-                        app:boxStrokeWidth="2dp"
-                        android:textColorHint="@color/input_border_color"
-                        app:hintTextColor="@color/input_border_color"
-                        app:startIconTint="@color/input_border_color">
+                        android:layout_marginTop="8dp"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        app:hintEnabled="false"
+                        app:boxBackgroundMode="filled"
+                        app:boxBackgroundColor="@color/medical_input_background"
+                        app:boxStrokeColor="@color/medical_input_stroke"
+                        app:boxStrokeWidth="1dp"
+                        app:boxCornerRadiusTopStart="12dp"
+                        app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp"
+                        app:boxCornerRadiusBottomEnd="12dp">
+
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etConditions"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:textColor="@color/input_border_color"/>
+                            android:hint="@string/conditions_placeholder"
+                            android:textColor="@color/medical_text_primary"/>
                     </com.google.android.material.textfield.TextInputLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/medical_devices_implants"
+                        android:textColor="@color/medical_text_primary"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:layout_marginTop="12dp"/>
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:hint="@string/medical_devices_implants"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
-                        app:boxStrokeColor="@color/input_border_color"
-                        app:boxStrokeWidth="2dp"
-                        android:textColorHint="@color/input_border_color"
-                        app:hintTextColor="@color/input_border_color"
-                        app:startIconTint="@color/input_border_color">
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        app:hintEnabled="false"
+                        app:boxBackgroundMode="filled"
+                        app:boxBackgroundColor="@color/medical_input_background"
+                        app:boxStrokeColor="@color/medical_input_stroke"
+                        app:boxStrokeWidth="1dp"
+                        app:boxCornerRadiusTopStart="12dp"
+                        app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp"
+                        app:boxCornerRadiusBottomEnd="12dp">
+
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etDevices"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:textColor="@color/input_border_color"/>
+                            android:hint="@string/devices_placeholder"
+                            android:textColor="@color/medical_text_primary"/>
                     </com.google.android.material.textfield.TextInputLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/recent_surgery"
+                        android:textColor="@color/medical_text_primary"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:layout_marginTop="12dp"/>
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:hint="@string/recent_surgery"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
-                        app:boxStrokeColor="@color/input_border_color"
-                        app:boxStrokeWidth="2dp"
-                        android:textColorHint="@color/input_border_color"
-                        app:hintTextColor="@color/input_border_color"
-                        app:startIconTint="@color/input_border_color">
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        app:hintEnabled="false"
+                        app:boxBackgroundMode="filled"
+                        app:boxBackgroundColor="@color/medical_input_background"
+                        app:boxStrokeColor="@color/medical_input_stroke"
+                        app:boxStrokeWidth="1dp"
+                        app:boxCornerRadiusTopStart="12dp"
+                        app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp"
+                        app:boxCornerRadiusBottomEnd="12dp">
+
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etSurgery"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:textColor="@color/input_border_color"/>
+                            android:hint="@string/surgery_placeholder"
+                            android:textColor="@color/medical_text_primary"/>
                     </com.google.android.material.textfield.TextInputLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/recent_test_results"
+                        android:textColor="@color/medical_text_primary"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:layout_marginTop="12dp"/>
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:hint="@string/recent_test_results"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
-                        app:boxStrokeColor="@color/input_border_color"
-                        app:boxStrokeWidth="2dp"
-                        android:textColorHint="@color/input_border_color"
-                        app:hintTextColor="@color/input_border_color"
-                        app:startIconTint="@color/input_border_color">
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        app:hintEnabled="false"
+                        app:boxBackgroundMode="filled"
+                        app:boxBackgroundColor="@color/medical_input_background"
+                        app:boxStrokeColor="@color/medical_input_stroke"
+                        app:boxStrokeWidth="1dp"
+                        app:boxCornerRadiusTopStart="12dp"
+                        app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp"
+                        app:boxCornerRadiusBottomEnd="12dp">
+
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etTestResults"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:textColor="@color/input_border_color"/>
+                            android:hint="@string/test_results_placeholder"
+                            android:textColor="@color/medical_text_primary"/>
                     </com.google.android.material.textfield.TextInputLayout>
-
                 </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnEdit"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:text="@string/edit_medical_id"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="@color/white"
+            app:cornerRadius="24dp"
+            android:backgroundTint="@color/header_red"/>
+
+        <LinearLayout
+            android:id="@+id/saveCancelRow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal"
+            android:visibility="gone">
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnEdit"
-                android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:text="@string/edit_medical_id"
-                android:textSize="16sp"
+                android:id="@+id/btnCancel"
+                android:layout_width="0dp"
+                android:layout_height="54dp"
+                android:layout_weight="1"
+                android:text="@string/cancel_changes"
+                android:textSize="15sp"
                 android:textStyle="bold"
-                app:cornerRadius="30dp"
-                android:textColor="#FFFFFF"
-                android:backgroundTint="#333333"
-                app:strokeColor="#555555"
-                app:strokeWidth="1dp"
-                android:layout_marginTop="16dp"/>
+                android:textColor="@color/medical_text_primary"
+                app:cornerRadius="24dp"
+                android:backgroundTint="@color/medical_card_background"
+                app:strokeColor="@color/medical_input_stroke"
+                app:strokeWidth="1dp"/>
+
+            <Space
+                android:layout_width="12dp"
+                android:layout_height="wrap_content"/>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnSave"
-                android:layout_width="match_parent"
-                android:layout_height="60dp"
+                android:layout_width="0dp"
+                android:layout_height="54dp"
+                android:layout_weight="1"
                 android:text="@string/save_medical_id"
-                android:textSize="16sp"
+                android:textSize="15sp"
                 android:textStyle="bold"
-                app:cornerRadius="30dp"
-                android:textColor="#FFFFFF"
-                android:backgroundTint="#D32F2F"
-                android:visibility="gone"
-                android:layout_marginTop="16dp"/>
-            <Space android:layout_width="match_parent" android:layout_height="40dp"/>
-
+                android:textColor="@color/white"
+                app:cornerRadius="24dp"
+                android:backgroundTint="@color/header_red"/>
         </LinearLayout>
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="24dp"/>
+
     </LinearLayout>
 </ScrollView>

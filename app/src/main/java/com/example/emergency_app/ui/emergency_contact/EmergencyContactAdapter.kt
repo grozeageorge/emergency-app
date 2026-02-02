@@ -1,5 +1,6 @@
 package com.example.emergency_app.ui.emergency_contact
 
+import android.content.res.ColorStateList
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
@@ -7,9 +8,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.TextView
+import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.example.emergency_app.R
 import com.example.emergency_app.model.EmergencyContact
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 
@@ -19,6 +23,8 @@ class EmergencyContactAdapter(
     private val onDeleteClick: (EmergencyContact) -> Unit,
     private val onSaveClick: (EmergencyContact) -> Unit // New callback for the "Saved" message
 ) : RecyclerView.Adapter<EmergencyContactAdapter.VH>() {
+
+    private val editSnapshots = mutableMapOf<String, EmergencyContact>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
         val v = LayoutInflater.from(parent.context)
@@ -33,10 +39,15 @@ class EmergencyContactAdapter(
     override fun getItemCount(): Int = items.size
 
     inner class VH(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val tvTitle: TextView = itemView.findViewById(R.id.tvTitle)
+        private val viewContainer: View = itemView.findViewById(R.id.viewContainer)
+        private val editContainer: View = itemView.findViewById(R.id.editContainer)
+        private val tvAvatar: TextView = itemView.findViewById(R.id.tvAvatar)
+        private val tvName: TextView = itemView.findViewById(R.id.tvName)
+        private val tvPhone: TextView = itemView.findViewById(R.id.tvPhone)
+        private val tvPriorityBadge: TextView = itemView.findViewById(R.id.tvPriorityBadge)
         private val btnCall: ImageButton = itemView.findViewById(R.id.btnCall)
-        private val btnDelete: ImageButton = itemView.findViewById(R.id.btnDelete)
-        private val btnEdit: ImageButton = itemView.findViewById(R.id.btnEdit) // New Button
+        private val btnDelete: MaterialButton = itemView.findViewById(R.id.btnDelete)
+        private val btnEdit: MaterialButton = itemView.findViewById(R.id.btnEdit)
 
         // Inputs
         private val etName: TextInputEditText = itemView.findViewById(R.id.etContactName)
@@ -68,8 +79,6 @@ class EmergencyContactAdapter(
             onDeleteClick: (EmergencyContact) -> Unit,
             onSaveClick: (EmergencyContact) -> Unit
         ) {
-            tvTitle.text = itemView.context.getString(R.string.title_contact_number, position + 1)
-
             removeTextWatchers()
 
             setTextNoAnim(tilName, etName, contact.name)
@@ -78,40 +87,116 @@ class EmergencyContactAdapter(
             setTextNoAnim(tilPriority, etPriority, if (contact.priority > 0) contact.priority.toString() else "")
             setTextNoAnim(tilAddress, etAddress, contact.address)
 
-            // 2. Handle Edit Mode vs View Mode
+            tvName.text = contact.name.ifBlank {
+                itemView.context.getString(R.string.not_set)
+            }
+            tvPhone.text = contact.phoneNumber.ifBlank {
+                itemView.context.getString(R.string.not_set)
+            }
+            tvPriorityBadge.text = if (contact.priority > 0) contact.priority.toString() else "-"
+            tvAvatar.text = contact.name.trim().firstOrNull()?.uppercaseChar()?.toString() ?: "?"
+
             if (contact.isEditing) {
+                viewContainer.visibility = View.GONE
+                editContainer.visibility = View.VISIBLE
                 enableInputs(true)
-                btnEdit.setImageResource(R.drawable.ic_check) // "Nike" checkmark
-                if (!etName.hasFocus())
+                btnEdit.text = itemView.context.getString(R.string.save)
+                btnEdit.setIconResource(R.drawable.ic_check)
+                btnEdit.setTextColor(ContextCompat.getColor(itemView.context, R.color.white))
+                btnEdit.setIconTintResource(R.color.white)
+                btnEdit.backgroundTintList = ContextCompat.getColorStateList(itemView.context, R.color.header_red)
+
+                btnDelete.text = itemView.context.getString(R.string.cancel_changes)
+                btnDelete.setIconResource(android.R.drawable.ic_menu_close_clear_cancel)
+                btnDelete.setTextColor(ContextCompat.getColor(itemView.context, R.color.medical_text_secondary))
+                btnDelete.setIconTintResource(R.color.medical_text_secondary)
+                btnDelete.backgroundTintList = ContextCompat.getColorStateList(itemView.context, R.color.medical_card_background)
+                btnDelete.strokeColor = ContextCompat.getColorStateList(itemView.context, R.color.medical_input_stroke)
+
+                updateSaveEnabled(true)
+
+                if (!etName.hasFocus()) {
                     etName.requestFocus()
+                }
             } else {
+                viewContainer.visibility = View.VISIBLE
+                editContainer.visibility = View.GONE
                 enableInputs(false)
-                btnEdit.setImageResource(R.drawable.ic_edit)
+                btnEdit.text = itemView.context.getString(R.string.edit)
+                btnEdit.setIconResource(R.drawable.ic_edit)
+                btnEdit.setTextColor(ContextCompat.getColor(itemView.context, R.color.medical_text_primary))
+                btnEdit.setIconTintResource(R.color.medical_text_primary)
+                btnEdit.backgroundTintList = ContextCompat.getColorStateList(itemView.context, R.color.medical_card_background)
+                btnEdit.strokeColor = ContextCompat.getColorStateList(itemView.context, R.color.medical_input_stroke)
+                btnEdit.isEnabled = true
+                btnEdit.alpha = 1f
+
+                btnDelete.text = itemView.context.getString(R.string.delete)
+                btnDelete.setIconResource(R.drawable.ic_delete)
+                btnDelete.setTextColor(ContextCompat.getColor(itemView.context, R.color.header_red))
+                btnDelete.setIconTintResource(R.color.header_red)
+                btnDelete.backgroundTintList = ContextCompat.getColorStateList(itemView.context, R.color.medical_card_background)
+                btnDelete.strokeColor = ContextCompat.getColorStateList(itemView.context, R.color.header_red)
+
+                editSnapshots.remove(contact.id)
             }
 
             btnEdit.setOnClickListener {
                 if (contact.isEditing) {
-                    // It WAS editing, user clicked SAVE
+                    if (!btnEdit.isEnabled) {
+                        Toast.makeText(itemView.context, R.string.required_fields_message, Toast.LENGTH_SHORT).show()
+                        return@setOnClickListener
+                    }
                     contact.isEditing = false
+                    editSnapshots.remove(contact.id)
                     notifyItemChanged(position)
                     onSaveClick(contact)
                 } else {
-                    // It WAS locked, user clicked EDIT
                     contact.isEditing = true
+                    editSnapshots[contact.id] = contact.copy()
                     notifyItemChanged(position)
+                }
+            }
+
+            btnDelete.setOnClickListener {
+                if (contact.isEditing) {
+                    editSnapshots[contact.id]?.let { snapshot ->
+                        contact.name = snapshot.name
+                        contact.relationship = snapshot.relationship
+                        contact.phoneNumber = snapshot.phoneNumber
+                        contact.priority = snapshot.priority
+                        contact.address = snapshot.address
+                    }
+                    contact.isEditing = false
+                    editSnapshots.remove(contact.id)
+                    notifyItemChanged(position)
+                } else {
+                    onDeleteClick(contact)
                 }
             }
 
             setupTextWatchers(contact)
 
             btnCall.setOnClickListener { onCallClick(contact.phoneNumber) }
-            btnDelete.setOnClickListener { onDeleteClick(contact) }
+        }
+
+        private fun updateSaveEnabled(isEditing: Boolean) {
+            if (!isEditing) {
+                btnEdit.isEnabled = true
+                btnEdit.alpha = 1f
+                return
+            }
+            val hasName = etName.text?.toString()?.trim().orEmpty().isNotEmpty()
+            val hasPhone = etPhone.text?.toString()?.trim().orEmpty().isNotEmpty()
+            val enabled = hasName && hasPhone
+            btnEdit.isEnabled = enabled
+            btnEdit.alpha = if (enabled) 1f else 0.5f
         }
 
         private fun setTextNoAnim(layout: TextInputLayout, editText: TextInputEditText, text: String) {
             val wasEnabled = layout.isHintAnimationEnabled
             layout.isHintAnimationEnabled = false // Turn off animation
-            editText.setText(text)                // Set text (snaps instantly)
+            editText.setText(text)
             layout.isHintAnimationEnabled = wasEnabled // Turn back on for user interaction
         }
 
@@ -127,7 +212,10 @@ class EmergencyContactAdapter(
 
         private fun setupTextWatchers(contact: EmergencyContact) {
             nameWatcher = object : SimpleTextWatcher() {
-                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { contact.name = s.toString() }
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    contact.name = s.toString()
+                    if (contact.isEditing) updateSaveEnabled(true)
+                }
             }
             etName.addTextChangedListener(nameWatcher)
 
@@ -137,12 +225,15 @@ class EmergencyContactAdapter(
             etRelation.addTextChangedListener(relationWatcher)
 
             phoneWatcher = object : SimpleTextWatcher() {
-                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { contact.phoneNumber = s.toString() }
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    contact.phoneNumber = s.toString()
+                    if (contact.isEditing) updateSaveEnabled(true)
+                }
             }
             etPhone.addTextChangedListener(phoneWatcher)
 
             priorityWatcher = object : SimpleTextWatcher() {
-                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { contact.priority = s.toString().toIntOrNull() ?: 9 }
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { contact.priority = s.toString().toIntOrNull() ?: 0 }
             }
             etPriority.addTextChangedListener(priorityWatcher)
 

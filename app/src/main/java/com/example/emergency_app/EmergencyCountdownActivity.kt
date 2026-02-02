@@ -70,7 +70,6 @@ class EmergencyCountdownActivity : AppCompatActivity() {
     }
 
     private fun startTimer() {
-        // Reduced to 5 seconds for testing purposes (Change back to 30000 later)
         timer = object : CountDownTimer(5000, 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 binding.tvCountdown.text = (millisUntilFinished / 1000).toString()
@@ -141,7 +140,6 @@ class EmergencyCountdownActivity : AppCompatActivity() {
                     }
                 }
 
-                // 2. CRITICAL FIX: Navigate back regardless of whether location was found or not
                 if (location != null) {
                     navigateBackAndStartSimulation(location.latitude, location.longitude)
                 } else {

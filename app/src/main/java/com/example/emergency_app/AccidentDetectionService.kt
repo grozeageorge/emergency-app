@@ -47,7 +47,6 @@ class AccidentDetectionService : Service(), SensorEventListener {
             val gForce = sqrt((x * x + y * y + z * z).toDouble()) / SensorManager.GRAVITY_EARTH
 
             if (gForce > crashThreshold) {
-                // STOP LISTENING so we don't trigger the screen 10 times in 1 second
                 sensorManager.unregisterListener(this)
                 triggerEmergencyCountdown()
             }

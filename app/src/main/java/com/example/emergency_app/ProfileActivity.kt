@@ -14,7 +14,6 @@ class ProfileActivity : AppCompatActivity() {
     private val pickImageLauncher =
         registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             uri?.let {
-                // 🔒 păstrează accesul PERMANENT
                 contentResolver.takePersistableUriPermission(
                     it,
                     Intent.FLAG_GRANT_READ_URI_PERMISSION

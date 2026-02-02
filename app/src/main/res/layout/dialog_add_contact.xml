@@ -1,47 +1,236 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="20dp">
+    android:padding="20dp"
+    android:background="@color/medical_card_background">
 
-    <EditText
-        android:id="@+id/etName"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Name (e.g. Jane Doe)"
-        android:inputType="textPersonName" />
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
 
-    <EditText
-        android:id="@+id/etRelationship"
+        <TextView
+            android:id="@+id/tvDialogTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/new_contact_title"
+            android:textColor="@color/medical_text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold"/>
+
+        <ImageButton
+            android:id="@+id/btnCloseDialog"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:contentDescription="@string/cancel_changes"
+            app:tint="@color/medical_text_secondary"/>
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/label_full_name_required"
+        android:textColor="@color/medical_text_primary"
+        android:textStyle="bold"
+        android:textSize="13sp"
+        android:layout_marginTop="16dp"/>
+
+    <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:hint="Relationship (e.g. Sister)"
-        android:inputType="text" />
+        android:layout_marginTop="8dp"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        app:hintEnabled="false"
+        app:boxBackgroundMode="filled"
+        app:boxBackgroundColor="@color/medical_input_background"
+        app:boxStrokeColor="@color/medical_input_stroke"
+        app:boxStrokeWidth="1dp"
+        app:boxCornerRadiusTopStart="12dp"
+        app:boxCornerRadiusTopEnd="12dp"
+        app:boxCornerRadiusBottomStart="12dp"
+        app:boxCornerRadiusBottomEnd="12dp">
 
-    <EditText
-        android:id="@+id/etPhone"
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/placeholder_full_name"
+            android:inputType="textPersonName"
+            android:textColor="@color/medical_text_primary"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/label_relationship"
+        android:textColor="@color/medical_text_primary"
+        android:textStyle="bold"
+        android:textSize="13sp"
+        android:layout_marginTop="12dp"/>
+
+    <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:hint="Phone Number"
-        android:inputType="phone" />
+        android:layout_marginTop="8dp"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        app:hintEnabled="false"
+        app:boxBackgroundMode="filled"
+        app:boxBackgroundColor="@color/medical_input_background"
+        app:boxStrokeColor="@color/medical_input_stroke"
+        app:boxStrokeWidth="1dp"
+        app:boxCornerRadiusTopStart="12dp"
+        app:boxCornerRadiusTopEnd="12dp"
+        app:boxCornerRadiusBottomStart="12dp"
+        app:boxCornerRadiusBottomEnd="12dp">
 
-    <EditText
-        android:id="@+id/etPriority"
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etRelationship"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/placeholder_relationship"
+            android:inputType="text"
+            android:textColor="@color/medical_text_primary"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/label_phone_required"
+        android:textColor="@color/medical_text_primary"
+        android:textStyle="bold"
+        android:textSize="13sp"
+        android:layout_marginTop="12dp"/>
+
+    <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:hint="Priority (e.g. 1)"
-        android:inputType="number" />
+        android:layout_marginTop="8dp"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        app:hintEnabled="false"
+        app:boxBackgroundMode="filled"
+        app:boxBackgroundColor="@color/medical_input_background"
+        app:boxStrokeColor="@color/medical_input_stroke"
+        app:boxStrokeWidth="1dp"
+        app:boxCornerRadiusTopStart="12dp"
+        app:boxCornerRadiusTopEnd="12dp"
+        app:boxCornerRadiusBottomStart="12dp"
+        app:boxCornerRadiusBottomEnd="12dp">
 
-    <EditText
-        android:id="@+id/etAddress"
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etPhone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/placeholder_phone"
+            android:inputType="phone"
+            android:textColor="@color/medical_text_primary"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/label_priority"
+        android:textColor="@color/medical_text_primary"
+        android:textStyle="bold"
+        android:textSize="13sp"
+        android:layout_marginTop="12dp"/>
+
+    <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:hint="Address (Optional)"
-        android:inputType="textPostalAddress" />
+        android:layout_marginTop="8dp"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        app:hintEnabled="false"
+        app:boxBackgroundMode="filled"
+        app:boxBackgroundColor="@color/medical_input_background"
+        app:boxStrokeColor="@color/medical_input_stroke"
+        app:boxStrokeWidth="1dp"
+        app:boxCornerRadiusTopStart="12dp"
+        app:boxCornerRadiusTopEnd="12dp"
+        app:boxCornerRadiusBottomStart="12dp"
+        app:boxCornerRadiusBottomEnd="12dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etPriority"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/placeholder_priority"
+            android:inputType="number"
+            android:textColor="@color/medical_text_primary"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/label_address"
+        android:textColor="@color/medical_text_primary"
+        android:textStyle="bold"
+        android:textSize="13sp"
+        android:layout_marginTop="12dp"/>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        app:hintEnabled="false"
+        app:boxBackgroundMode="filled"
+        app:boxBackgroundColor="@color/medical_input_background"
+        app:boxStrokeColor="@color/medical_input_stroke"
+        app:boxStrokeWidth="1dp"
+        app:boxCornerRadiusTopStart="12dp"
+        app:boxCornerRadiusTopEnd="12dp"
+        app:boxCornerRadiusBottomStart="12dp"
+        app:boxCornerRadiusBottomEnd="12dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etAddress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/placeholder_address"
+            android:inputType="textPostalAddress"
+            android:textColor="@color/medical_text_primary"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCancelDialog"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:text="@string/cancel_changes"
+            android:textStyle="bold"
+            android:textColor="@color/medical_text_primary"
+            app:cornerRadius="24dp"
+            android:backgroundTint="@color/medical_card_background"
+            app:strokeColor="@color/medical_input_stroke"
+            app:strokeWidth="1dp"/>
+
+        <Space
+            android:layout_width="12dp"
+            android:layout_height="wrap_content"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnAddContactDialog"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:text="@string/add_contact"
+            android:textStyle="bold"
+            android:textColor="@color/white"
+            app:cornerRadius="24dp"
+            android:backgroundTint="@color/header_red"/>
+    </LinearLayout>
 
 </LinearLayout>

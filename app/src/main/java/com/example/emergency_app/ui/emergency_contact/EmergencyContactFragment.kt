@@ -10,10 +10,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import android.text.Editable
+import android.text.TextWatcher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.emergency_app.R
+import com.example.emergency_app.databinding.DialogAddContactBinding
 import com.example.emergency_app.databinding.FragmentEmergencyContactBinding
 import com.example.emergency_app.model.EmergencyContact
 import androidx.core.net.toUri
@@ -66,9 +71,7 @@ class EmergencyContactFragment : Fragment() {
 
         imgProfile = binding.imgProfile
 
-
         loadProfileImage()
-
 
         imgProfile.setOnClickListener {
             pickImageLauncher.launch("image/*")
@@ -111,16 +114,70 @@ class EmergencyContactFragment : Fragment() {
         binding.contactsRv.adapter = adapter
 
         binding.btnAddContact.setOnClickListener {
-            val newContact = EmergencyContact(isEditing = true)
-            contacts.add(newContact)
-            adapter.notifyItemInserted(contacts.size - 1)
-            binding.contactsRv.scrollToPosition(contacts.size - 1)
+            showAddContactDialog()
+        }
+
+        binding.btnAddFirstContact.setOnClickListener {
+            showAddContactDialog()
         }
 
         setupRealtimeUpdates()
     }
 
+    private fun updateEmptyState() {
+        val isEmpty = contacts.isEmpty()
+        binding.emptyStateLayout.visibility = if (isEmpty) View.VISIBLE else View.GONE
+        binding.contactsRv.visibility = if (isEmpty) View.GONE else View.VISIBLE
+        binding.btnAddContact.visibility = if (isEmpty) View.GONE else View.VISIBLE
+    }
 
+    private fun showAddContactDialog() {
+        val dialogBinding = DialogAddContactBinding.inflate(layoutInflater)
+        val dialog = AlertDialog.Builder(requireContext())
+            .setView(dialogBinding.root)
+            .setCancelable(false)
+            .create()
+
+        fun updateAddEnabled() {
+            val hasName = dialogBinding.etName.text?.toString()?.trim().orEmpty().isNotEmpty()
+            val hasPhone = dialogBinding.etPhone.text?.toString()?.trim().orEmpty().isNotEmpty()
+            val enabled = hasName && hasPhone
+            dialogBinding.btnAddContactDialog.isEnabled = enabled
+            dialogBinding.btnAddContactDialog.alpha = if (enabled) 1f else 0.5f
+        }
+
+        val watcher = object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = updateAddEnabled()
+            override fun afterTextChanged(s: Editable?) = Unit
+        }
+
+        dialogBinding.etName.addTextChangedListener(watcher)
+        dialogBinding.etPhone.addTextChangedListener(watcher)
+        updateAddEnabled()
+
+        dialogBinding.btnCloseDialog.setOnClickListener { dialog.dismiss() }
+        dialogBinding.btnCancelDialog.setOnClickListener { dialog.dismiss() }
+
+        dialogBinding.btnAddContactDialog.setOnClickListener {
+            val priority = dialogBinding.etPriority.text?.toString()?.toIntOrNull() ?: 1
+            val contact = EmergencyContact(
+                name = dialogBinding.etName.text?.toString()?.trim().orEmpty(),
+                relationship = dialogBinding.etRelationship.text?.toString()?.trim().orEmpty(),
+                phoneNumber = dialogBinding.etPhone.text?.toString()?.trim().orEmpty(),
+                priority = priority,
+                address = dialogBinding.etAddress.text?.toString()?.trim().orEmpty(),
+                isEditing = false
+            )
+            contacts.add(contact)
+            adapter.notifyItemInserted(contacts.size - 1)
+            updateEmptyState()
+            saveContactToFirestore(contact)
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
 
     private fun setupRealtimeUpdates() {
         if (snapshotListener != null) {
@@ -146,17 +203,14 @@ class EmergencyContactFragment : Fragment() {
             }
 
             if (snapshot != null) {
-                // 1. Clear the list ONCE before adding new stuff
                 contacts.clear()
 
-                // 2. Convert all documents to objects
                 val loadedContacts = snapshot.toObjects(EmergencyContact::class.java)
 
-                // 3. Add them to your list
                 contacts.addAll(loadedContacts)
 
-                // 4. Refresh the whole list
                 adapter.notifyDataSetChanged()
+                updateEmptyState()
             }
         }
     }

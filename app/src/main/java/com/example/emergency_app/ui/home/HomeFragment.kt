@@ -156,10 +156,10 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
                 drawRouteAndStartAnimation(
                     simulationViewModel.activeRoad!!,
                     simulationViewModel.duration,
-                    elapsedTime // Resume where we left off
+                    elapsedTime
                 )
             } else {
-                resetUI() // It finished while we were away
+                resetUI()
             }
         }
     }
@@ -171,7 +171,7 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
         }
 
         speak("Help is on the way. Calculating route from nearest hospital.")
-        vibratePhone(isArrival = false) // Start Pattern
+        vibratePhone(isArrival = false)
         restoreUIForEmergency()
 
         val userLocation = if (lat != 0.0 && lon != 0.0) GeoPoint(lat, lon) else locationOverlay?.myLocation ?: GeoPoint(44.4268, 26.1025)
@@ -221,28 +221,22 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
     }
 
     private fun drawRouteAndStartAnimation(road: Road, durationMs: Long, startTime: Long) {
-        // 1. Clean up old overlays
         routeOverlay?.let { binding.map.overlays.remove(it) }
-        // Note: We don't remove vehicleOverlay, we just update its position
 
-        // 2. Draw Route
         routeOverlay = RoadManager.buildRoadOverlay(road)
         routeOverlay?.outlinePaint?.color = Color.RED
         routeOverlay?.outlinePaint?.strokeWidth = 15f
         binding.map.overlays.add(routeOverlay)
 
-        // 3. Set Initial Vehicle Position
         val startPoint = road.mRouteHigh.first()
         vehicleOverlay.position = startPoint
         vehicleOverlay.bearing = 0f // Reset bearing
 
-        // Ensure vehicle is on top of the route
         if (binding.map.overlays.contains(vehicleOverlay)) {
             binding.map.overlays.remove(vehicleOverlay)
             binding.map.overlays.add(vehicleOverlay)
         }
 
-        // 4. Zoom Logic
         if (startTime == 0L) {
             binding.map.zoomToBoundingBox(road.mBoundingBox, true)
         } else {
@@ -250,7 +244,6 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
         }
         binding.map.invalidate()
 
-        // 5. Start Animation
         animateCarAlongRoad(road, durationMs, startTime)
     }
 
@@ -258,25 +251,21 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
         val routePoints = road.mRouteHigh
         if (routePoints.isEmpty()) return
 
-        // Cleanup previous
         animationHandler?.removeCallbacks(animationRunnable ?: return)
         animationHandler = Handler(Looper.getMainLooper())
 
         val interpolator = LinearInterpolator()
-        // Determine offset for resume
         val startTimestamp = SystemClock.uptimeMillis() - startTime
 
         animationRunnable = object : Runnable {
             override fun run() {
                 if (_binding == null || !simulationViewModel.isSimulating) return
 
-                // Calculate progress
                 val elapsed = SystemClock.uptimeMillis() - startTimestamp
                 val t = interpolator
                     .getInterpolation(elapsed.toFloat() / durationMs)
                     .coerceIn(0f, 1f)
 
-                // Find Position on path
                 val exactIndex = t * (routePoints.size - 1)
                 val index = exactIndex.toInt()
                 val nextIndex = (index + 1).coerceAtMost(routePoints.size - 1)
@@ -289,7 +278,6 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
                 val lon = (1 - segmentT) * p0.longitude + segmentT * p1.longitude
                 val currentPos = GeoPoint(lat, lon)
 
-                // --- Stable Look-Ahead Bearing ---
                 var lookAhead = nextIndex
                 var bearing = 0f
 
@@ -302,22 +290,18 @@ class HomeFragment : Fragment(), TextToSpeech.OnInitListener {
                     lookAhead++
                 }
 
-                // Update Your Custom Overlay
                 vehicleOverlay.position = currentPos
                 vehicleOverlay.bearing = bearing
 
                 binding.map.invalidate()
 
-                // Continue or Finish
                 if (t < 1f) {
                     animationHandler?.postDelayed(this, 16) // ~60fps
                 } else {
-                    // ARRIVAL
                     Toast.makeText(context, "Ambulance Arrived!", Toast.LENGTH_LONG).show()
                     speak("The ambulance has arrived at your location.")
                     vibratePhone(isArrival = true)
 
-                    // Reset UI after 10 seconds
                     lifecycleScope.launch {
                         delay(10000)
                         resetUI()

@@ -55,6 +55,6 @@ class LoginActivity : AppCompatActivity() {
 
     private fun goToMainActivity() {
         startActivity(Intent(this, MainActivity::class.java))
-        finish() // Closes LoginActivity so 'Back' button doesn't take you back to login
+        finish()
     }
 }
