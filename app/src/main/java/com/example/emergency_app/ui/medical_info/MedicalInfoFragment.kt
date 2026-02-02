@@ -11,6 +11,13 @@ import com.example.emergency_app.databinding.FragmentMedicalInfoBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
+import android.content.Context
+import android.net.Uri
+import android.widget.ImageView
+import java.io.File
+import androidx.activity.result.contract.ActivityResultContracts
+import android.content.SharedPreferences
+
 
 
 class MedicalInfoFragment : Fragment() {
@@ -28,8 +35,18 @@ class MedicalInfoFragment : Fragment() {
         _binding = FragmentMedicalInfoBinding.inflate(inflater, container, false)
         return binding.root
     }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        imgProfile = binding.imgProfile
+
+        imgProfile.setOnClickListener {
+            pickImageLauncher.launch("image/*")
+        }
+
+        loadProfileImage()
+
 
         db = FirebaseFirestore.getInstance()
         auth = FirebaseAuth.getInstance()
@@ -53,6 +70,17 @@ class MedicalInfoFragment : Fragment() {
             viewModel.refresh()
         }
     }
+
+    private lateinit var imgProfile: ImageView
+
+
+    private val pickImageLauncher =
+        registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+            uri?.let {
+                saveImageUri(it)
+            }
+        }
+
 
     private fun setEditMode(isEditing: Boolean) {
         binding.apply {
@@ -133,8 +161,73 @@ class MedicalInfoFragment : Fragment() {
         }
     }
 
+    private fun saveImageUri(uri: Uri) {
+        val inputStream = requireContext().contentResolver.openInputStream(uri) ?: return
+
+        val file = File(requireContext().filesDir, "profile.jpg")
+        file.outputStream().use { output ->
+            inputStream.copyTo(output)
+        }
+
+        requireContext()
+            .getSharedPreferences("profile_prefs", Context.MODE_PRIVATE)
+            .edit()
+            .putString("profile_image_path", file.absolutePath)
+            .apply()
+    }
+
+    private fun loadProfileImage() {
+        if (!isAdded || _binding == null || view == null) return
+
+        val path = requireContext()
+            .getSharedPreferences("profile_prefs", Context.MODE_PRIVATE)
+            .getString("profile_image_path", null)
+
+        path?.let {
+            val file = File(it)
+            if (file.exists()) {
+                imgProfile.setImageURI(null)
+                imgProfile.setImageURI(Uri.fromFile(file))
+            }
+        }
+    }
+
+
+
+    private val prefsListener =
+        SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key == "profile_image_path") {
+                loadProfileImage()
+            }
+        }
+
+
     override fun onDestroyView() {
         super.onDestroyView()
+
+        requireContext()
+            .getSharedPreferences("profile_prefs", Context.MODE_PRIVATE)
+            .unregisterOnSharedPreferenceChangeListener(prefsListener)
+
         _binding = null
     }
+
+
+    override fun onResume() {
+        super.onResume()
+        loadProfileImage()
+
+        requireContext()
+            .getSharedPreferences("profile_prefs", Context.MODE_PRIVATE)
+            .registerOnSharedPreferenceChangeListener(prefsListener)
+    }
+
+    override fun onPause() {
+        super.onPause()
+
+        requireContext()
+            .getSharedPreferences("profile_prefs", Context.MODE_PRIVATE)
+            .unregisterOnSharedPreferenceChangeListener(prefsListener)
+    }
+
 }
