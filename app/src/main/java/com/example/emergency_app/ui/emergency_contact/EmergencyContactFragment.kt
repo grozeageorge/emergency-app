@@ -214,7 +214,6 @@ class EmergencyContactFragment : Fragment() {
             }
         }
     }
-
     private fun saveContactToFirestore(contact: EmergencyContact) {
         val userId = auth.currentUser?.uid ?: return
 
