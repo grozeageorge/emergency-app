@@ -22,8 +22,6 @@ class AccidentDetectionService : Service(), SensorEventListener {
 
     private lateinit var sensorManager: SensorManager
     private var accelerometer: Sensor? = null
-
-    // Threshold: 5G is a good balance for accidents
     private val crashThreshold = 5.0
 
     override fun onCreate() {
@@ -34,8 +32,6 @@ class AccidentDetectionService : Service(), SensorEventListener {
 
         startForegroundServiceNotification()
 
-        // 3. Register Listener
-        // CHANGED: Use SENSOR_DELAY_GAME (20ms) to catch the sudden impact spike
         accelerometer?.also {
             sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_GAME)
         }

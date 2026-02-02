@@ -22,7 +22,7 @@ class EmergencyCountdownActivity : AppCompatActivity() {
     // --- DEVELOPER SWITCH ---
     // Set to TRUE to stop sending real SMS.
     // Set to FALSE before pushing to GitHub.
-    private val testMode = true
+    private val testMode = false
 
     private lateinit var binding: ActivityCountdownBinding
     private var timer: CountDownTimer? = null
@@ -145,18 +145,18 @@ class EmergencyCountdownActivity : AppCompatActivity() {
                 if (location != null) {
                     navigateBackAndStartSimulation(location.latitude, location.longitude)
                 } else {
-                    navigateBackAndStartSimulation(0.0, 0.0)
+                    navigateBack()
                 }
             }
             .addOnFailureListener {
-                if (testMode) Toast.makeText(this, "Location failed", Toast.LENGTH_SHORT).show()
-                navigateBackAndStartSimulation(0.0, 0.0)
+                navigateBack()
             }
     }
 
     private fun navigateBack()
     {
         val intent = Intent(this, MainActivity::class.java)
+        Toast.makeText(this, "Location failed", Toast.LENGTH_SHORT).show()
         startActivity(intent)
         finish()
     }
