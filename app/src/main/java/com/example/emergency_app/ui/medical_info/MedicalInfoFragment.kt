@@ -17,16 +17,24 @@ import android.widget.ImageView
 import java.io.File
 import androidx.activity.result.contract.ActivityResultContracts
 import android.content.SharedPreferences
-
+import androidx.activity.result.ActivityResultLauncher
 
 
 class MedicalInfoFragment : Fragment() {
     private var _binding: FragmentMedicalInfoBinding? = null
     private val binding get() = _binding!!
 
-    // Firebase
+    private lateinit var pickImageLauncher: ActivityResultLauncher<String>
+
     private lateinit var db: FirebaseFirestore
     private lateinit var auth: FirebaseAuth
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+            uri?.let { saveImageUri(it) }
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -36,12 +44,11 @@ class MedicalInfoFragment : Fragment() {
         return binding.root
     }
 
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        imgProfile = binding.imgProfile
-
-        imgProfile.setOnClickListener {
+        binding.imgProfile.setOnClickListener {
             pickImageLauncher.launch("image/*")
         }
 
@@ -70,17 +77,6 @@ class MedicalInfoFragment : Fragment() {
             viewModel.refresh()
         }
     }
-
-    private lateinit var imgProfile: ImageView
-
-
-    private val pickImageLauncher =
-        registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-            uri?.let {
-                saveImageUri(it)
-            }
-        }
-
 
     private fun setEditMode(isEditing: Boolean) {
         binding.apply {
@@ -139,7 +135,7 @@ class MedicalInfoFragment : Fragment() {
         val sharedPref = requireContext().getSharedPreferences("EmergencyLocalPrefs", android.content.Context.MODE_PRIVATE)
         with (sharedPref.edit()) {
             putString("LOCK_SCREEN_INFO", summary)
-            apply() // Writes to disk immediately
+            apply()
         }
     }
     private fun populateFields(data: Map<String, Any>) {
@@ -186,8 +182,8 @@ class MedicalInfoFragment : Fragment() {
         path?.let {
             val file = File(it)
             if (file.exists()) {
-                imgProfile.setImageURI(null)
-                imgProfile.setImageURI(Uri.fromFile(file))
+                binding.imgProfile.setImageURI(null)
+                binding.imgProfile.setImageURI(Uri.fromFile(file))
             }
         }
     }
